@@ -1,0 +1,70 @@
+# use glob syntax.
+syntax: glob
+.gradle/
+
+# Gradle environment specific properties
+gradle.properties
+
+# Build output
+build/
+out/
+target/
+bin/
+test-output/
+src/main/resources/web/help/onlinehelp
+.cache
+# Maven
+pom.xml
+
+# Eclipse
+.metadata/
+.settings/
+.classpath
+.project
+.pydevproject
+.scala_dependencies
+.cache-main
+.cache-tests
+
+# IntelliJ
+.idea/
+*.iml
+*.ipr
+*.iws
+*.log
+s101plugin.state
+
+# If you have these in your workspace you need to clean up!
+*.hdb*
+build-number.txt
+atlassian-ide-plugin.xml
+
+# Mac
+.DS_Store
+
+# Tests working folders
+integration-test
+ui-integration-test
+deployit-defaults.properties
+server-core/recovery
+
+# SBT
+.history
+integration/riatest/riatest-results.txt
+integration/data/.cache
+*.rtw
+
+*.swp
+integration/riatest/baseWorkDir/
+integration/core/recovery/
+integration/core/baseWorkDir/
+integration/riatest/recovery/
+.ropeproject
+./recovery/
+
+#Jenkins builds
+.Xauthority*
+deployitpackage/
+
+#NodeJS
+node_modules/

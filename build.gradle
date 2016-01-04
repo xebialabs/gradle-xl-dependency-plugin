@@ -1,0 +1,70 @@
+plugins {
+    id "groovy"
+    id "idea"
+    id "maven"
+    id "com.github.hierynomus.license" version "0.11.0"
+}
+
+
+group = 'com.xebialabs.gradle.plugins'
+version = "0.1.0"
+defaultTasks 'build'
+
+sourceCompatibility = 1.7
+targetCompatibility = 1.7
+
+repositories { jcenter() }
+
+idea {
+    module {
+        downloadJavadoc = true
+        downloadSources = true
+    }
+}
+
+configurations.compile.transitive = false
+
+dependencies {
+    compile gradleApi()
+    compile "com.typesafe:config:1.2.1"
+    compile "io.spring.gradle:dependency-management-plugin:0.5.3.RELEASE"
+
+    testCompile('org.spockframework:spock-core:0.7-groovy-2.0') {
+        exclude group: 'org.codehaus.groovy', module: 'groovy-all'
+    }
+    testCompile gradleTestKit()
+}
+
+// This disables the pedantic doclint feature of JDK8
+if (JavaVersion.current().isJava8Compatible()) {
+    tasks.withType(Javadoc) {
+        options.addStringOption('Xdoclint:none', '-quiet')
+    }
+}
+
+task sourcesJar(type: Jar) {
+    from sourceSets.main.allSource
+    classifier = 'sources'
+}
+
+task javadocJar(type: Jar, dependsOn: javadoc) {
+    classifier = 'javadoc'
+    from javadoc.destinationDir
+}
+
+test {
+  afterSuite { descriptor, result ->
+    def indicator = "\u001B[32m✓\u001b[0m"
+    if (result.failedTestCount > 0) {
+      indicator = "\u001B[31m✘\u001b[0m"
+    }
+    logger.lifecycle("$indicator Test ${descriptor.name}; Executed: ${result.testCount}/\u001B[32m${result.successfulTestCount}\u001B[0m/\u001B[31m${result.failedTestCount}\u001B[0m")
+  }
+}
+
+if (!System.env.containsKey("JENKINS_URL")) {
+    def javaVersion = System.properties['java.version']
+    if (JavaVersion.toVersion(javaVersion) != project.targetCompatibility) {
+//        throw new GradleException("Expected Java version ${project.targetCompatibility} but running with $javaVersion")
+    }
+}
