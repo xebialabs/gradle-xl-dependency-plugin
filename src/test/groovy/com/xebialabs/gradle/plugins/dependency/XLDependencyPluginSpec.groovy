@@ -12,14 +12,11 @@ class XLDependencyPluginSpec extends Specification {
     @Rule
     TemporaryFolder temporaryFolder
 
-    File buildFile
-
     Project project
     File artifactDir
 
     def setup() {
         def projectDir = temporaryFolder.newFolder("test-project")
-        buildFile = new File(projectDir, "build.gradle")
         def folder = new File(projectDir, "gradle")
         folder.mkdir()
         writeFile(new File(folder, "dependencies.conf"), "versions { junitVersion: \"4.12\" }")
@@ -52,8 +49,8 @@ class XLDependencyPluginSpec extends Specification {
         project.apply plugin: "xebialabs.dependency"
 
         when:
-        project.dependencyManagement.imports {
-                dependenciesFile("extra-versions.conf")
+        project.dependencyManagement {
+                importConf project.file("extra-versions.conf")
         }
 
         then:
@@ -70,8 +67,8 @@ dependencies: [
 
         project.apply plugin: "xebialabs.dependency"
         project.apply plugin: "java"
-        project.dependencyManagement.imports {
-            dependenciesFile("dependencies.conf")
+        project.dependencyManagement {
+            importConf project.file("dependencies.conf")
         }
         project.dependencies {
             compile "junit:junit"
@@ -98,8 +95,8 @@ dependencies: [
 
         project.apply plugin: "xebialabs.dependency"
         project.apply plugin: "java"
-        project.dependencyManagement.imports {
-            dependenciesFile("dependencies.conf")
+        project.dependencyManagement {
+            importConf project.file("dependencies.conf")
         }
         project.dependencies {
             compile "ch.qos.logback:logback-core"
@@ -121,8 +118,8 @@ dependencies: [
 ]""")
         project.apply plugin: "xebialabs.dependency"
         project.apply plugin: "java"
-        project.dependencyManagement.imports {
-            dependenciesArtifact("test:dependencies:1.0:depmgmt")
+        project.dependencyManagement {
+            importConf "test:dependencies:1.0:depmgmt"
         }
 
         project.dependencies {
@@ -137,13 +134,9 @@ dependencies: [
         files.collect { it.name }.contains('junit-4.12.jar')
     }
 
-    def writeFile(File file, String content) {
+    private def writeFile(File file, String content) {
         file.withWriter { BufferedWriter writer ->
             writer.write(content)
         }
-    }
-
-    def writeBuildFile(String content) {
-        writeFile(buildFile, content)
     }
 }

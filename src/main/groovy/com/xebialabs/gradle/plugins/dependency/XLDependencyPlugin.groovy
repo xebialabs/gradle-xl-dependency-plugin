@@ -12,8 +12,9 @@ class XLDependencyPlugin implements Plugin<Project> {
     void apply(Project project) {
         project.apply plugin: "xebialabs.dependency.base"
 
-        project.dependencyManagement.imports {
-            dependenciesFile "gradle/dependencies.conf"
+        project.dependencyManagement {
+            importConf project.file("gradle/dependencies.conf")
         }
+
     }
 }

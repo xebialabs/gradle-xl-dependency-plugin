@@ -1,38 +1,31 @@
 package com.xebialabs.gradle.plugins.dependency
 
-import io.spring.gradle.dependencymanagement.ImportsHandler
-import org.gradle.api.GradleException
 import org.gradle.api.Plugin
 import org.gradle.api.Project
+import org.gradle.api.artifacts.DependencyResolveDetails
 
-class XLDependencyBasePlugin  implements Plugin<Project> {
+class XLDependencyBasePlugin implements Plugin<Project> {
 
-    Project project
+    public void apply(Project project) {
+        assert project.rootProject == project: "Please apply plugin 'xebialabs.dependency.base' on the rootProject only!"
 
-    @Override
-    void apply(Project project) {
-        this.project = project
-        XLDependencyManagement dependencyManagement = new XLDependencyManagement(project)
+        DependencyManagementContainer container = new DependencyManagementContainer(project)
+        project.getExtensions().create("dependencyManagement", DependencyManagementExtension.class, project, container);
 
-        ImportsHandler.metaClass.dependenciesFile = { def file ->
-            dependencyManagement.dependenciesFile(delegate.container, delegate.configuration, asFile(file))
-        }
-
-        ImportsHandler.metaClass.dependenciesArtifact = { def dependency ->
-            dependencyManagement.dependenciesArtifact(delegate.container, delegate.configuration, dependency)
-        }
-
-        project.plugins.apply("io.spring.dependency-management")
-    }
-
-    def asFile(file) {
-        if (file instanceof String) {
-            return project.file(file)
-        } else if (file instanceof File) {
-            return file
-        } else {
-            throw new GradleException("$file is not a file or string")
+        project.allprojects {
+            configurations.all { configuration ->
+                resolutionStrategy.eachDependency {
+                    DependencyResolveDetails details ->
+                        container.resolveIfNecessary()
+                        def version = container.getManagedVersion(details.requested.group, details.requested.name)
+                        if (version) {
+                            project.logger.lifecycle("Resolved version $version for ${details.requested.group}:${details.requested.name}")
+                            details.useVersion(version)
+                        } else {
+                            project.logger.lifecycle("Using version ${details.requested.version} for ${details.requested.group}:${details.requested.name}")
+                        }
+                }
+            }
         }
     }
 }
-

@@ -27,7 +27,6 @@ configurations.compile.transitive = false
 dependencies {
     compile gradleApi()
     compile "com.typesafe:config:1.2.1"
-    compile "io.spring.gradle:dependency-management-plugin:0.5.3.RELEASE"
 
     testCompile('org.spockframework:spock-core:0.7-groovy-2.0') {
         exclude group: 'org.codehaus.groovy', module: 'groovy-all'
