@@ -19,7 +19,7 @@ class XLDependencyPluginSpec extends Specification {
         def projectDir = temporaryFolder.newFolder("test-project")
         def folder = new File(projectDir, "gradle")
         folder.mkdir()
-        writeFile(new File(folder, "dependencies.conf"), "versions { junitVersion: \"4.12\" }")
+        writeFile(new File(folder, "dependencies.conf"), "dependencyManagement { versions { junitVersion: \"4.12\" } }")
         project = ProjectBuilder.builder().withProjectDir(projectDir).build()
         def repoDir = temporaryFolder.newFolder("repo")
 
@@ -45,7 +45,7 @@ class XLDependencyPluginSpec extends Specification {
 
     def "should apply a versions file from the currently built project"() {
         given:
-        writeFile(project.file("extra-versions.conf"), "versions { overthereVersion: \"4.2.0\" }")
+        writeFile(project.file("extra-versions.conf"), "dependencyManagement { versions { overthereVersion: \"4.2.0\" } }")
         project.apply plugin: "xebialabs.dependency"
 
         when:
@@ -61,7 +61,7 @@ class XLDependencyPluginSpec extends Specification {
     def "should apply a dependencies file with a dependency local to the project"() {
         given:
         writeFile(project.file("dependencies.conf"), """
-dependencies: [
+dependencyManagement.dependencies: [
     "junit:junit:\$junitVersion"
 ]""")
 
@@ -85,7 +85,7 @@ dependencies: [
     def "should apply a dependencies file with a dependency-set local to the project"() {
         given:
         writeFile(project.file("dependencies.conf"), """
-dependencies: [
+dependencyManagement.dependencies: [
     {
         group: "ch.qos.logback"
         version: "1.1.3"
@@ -113,7 +113,7 @@ dependencies: [
     def "should resolve dependencies artifact"() {
         given:
         writeFile(new File(artifactDir, "dependencies-1.0-depmgmt.conf"), """
-dependencies: [
+dependencyManagement.dependencies: [
     "junit:junit:\$junitVersion"
 ]""")
         project.apply plugin: "xebialabs.dependency"

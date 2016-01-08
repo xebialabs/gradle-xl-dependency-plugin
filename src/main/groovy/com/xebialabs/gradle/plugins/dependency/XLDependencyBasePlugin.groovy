@@ -19,10 +19,10 @@ class XLDependencyBasePlugin implements Plugin<Project> {
                         container.resolveIfNecessary()
                         def version = container.getManagedVersion(details.requested.group, details.requested.name)
                         if (version) {
-                            project.logger.lifecycle("Resolved version $version for ${details.requested.group}:${details.requested.name}")
+                            project.logger.info("Resolved version $version for ${details.requested.group}:${details.requested.name}")
                             details.useVersion(version)
                         } else {
-                            project.logger.lifecycle("Using version ${details.requested.version} for ${details.requested.group}:${details.requested.name}")
+                            project.logger.info("No managed version for ${details.requested.group}:${details.requested.name} --> using version ${details.requested.version}")
                         }
                 }
             }

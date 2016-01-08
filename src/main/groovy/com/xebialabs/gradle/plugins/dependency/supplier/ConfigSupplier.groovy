@@ -21,14 +21,14 @@ abstract class ConfigSupplier implements DependencyManagementSupplier {
     }
 
     def collectDependencies(Config config, DependencyManagementContainer container) {
-        if (config.hasPath("dependencies")) {
-            parseDependencies(config.getList("dependencies"), container)
+        if (config.hasPath("dependencyManagement.dependencies")) {
+            parseDependencies(config.getList("dependencyManagement.dependencies"), container)
         }
     }
 
     def collectVersions(Config config, DependencyManagementContainer container) {
-        if (config.hasPath("versions")) {
-            parseVersions(config.getConfig("versions"), container)
+        if (config.hasPath("dependencyManagement.versions")) {
+            parseVersions(config.getConfig("dependencyManagement.versions"), container)
         }
     }
 

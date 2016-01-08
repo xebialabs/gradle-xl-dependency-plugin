@@ -1,0 +1,110 @@
+= Gradle XebiaLabs Dependency Management Plugin
+:plugin_version: 0.1.0
+:source-highlighter: pygments
+
+This is the Gradle XebiaLabs Dependency Management plugin. When applied to your Gradle project it will be possible to omit version numbers from the specified dependencies, and have them come from imported dependency specification files.
+
+== How to apply
+This plugin is not published (_yet_) to Gradle Plugin Central. It is only available from our Nexus. Please apply the plugin using the following code in the `rootProject` _build.gradle_ file.
+
+[source,groovy,subs="verbatim,attributes"]
+.rootProject build.gradle
+----
+buildscript {
+  repositories {
+    maven {
+        url "${nexusBaseUrl}/repositories/releases"
+        credentials {
+            username nexusUserName
+            password nexusPassword
+        }
+    }
+
+  }
+
+  dependencies {
+    classpath "com.xebialabs.gradle.plugins:gradle-xl-dependency-plugin:{plugin_version}"
+  }
+
+  apply plugin: 'xebialabs.dependency'
+}
+----
+
+== Plugins contained
+
+=== The 'xebialabs.dependency.base' plugin
+This plugin is the _base_ plugin that doesn't force any opinions on the project. Note this plugin can _only_ be applied on the `rootProject`
+
+==== What it does
+When applied the plugin does the following:
+
+- An extension named `dependencyManagement` is added to the `rootProject`
+- The `resolutionStrategy` of `allProjects.configurations` is set to resolve versions against this plugin
+
+=== The `xebialabs.dependency` plugin
+This plugin builds on top of the `xebialabs.dependency.base` plugin, and adds the opinion that every project should contain a `${rootProject.projectDir}/gradle/dependencies.conf` file, containing versions.
+
+== How it works
+Using the `dependencyManagement` extension it is possible to import configuration files containing dependency information.
+
+- You can either import a file local to the project
+- You can import a maven dependency using the shortform (`<group_id>:<artifact_id>:<version>`) dependency notation. In this case the plugin will attempt to find the `<artifact_id>.conf` file located at that location in the maven repository.
+
+For example:
+
+[source,groovy,subs="verbatim,attributes"]
+.build.gradle example
+----
+apply plugin: 'java'
+apply plugin: 'xebialabs.dependency'
+
+dependencyManagement {
+  importConf rootProject.file("path/to/hocon.conf")
+  importConf "com.xebialabs.xlplatform:reference:1.0"
+}
+
+repositories {
+  mavenCentral()
+}
+
+dependencies {
+  compile "com.typesafe.akka:akka-actor_$scalaVersion"
+  testCompile "junit:junit"
+
+}
+----
+
+== The file format
+The plugin reads the dependency management specification from a https://github.com/typesafehub/config[HOCON] file. The format of the HOCON file should be the following:
+
+[source,subs='verbatim,attributes']
+.reference.conf
+----
+dependencyManagement {
+  versions {
+    junitVersion: "4.12"
+    scalaVersion: "2.11"
+    akkaVersion: "2.3.9"
+  }
+  dependencies: [
+    "junit:junit:$junitVersion"
+    {
+      group: "com.typesafe.akka"
+      version: "$akkaVersion"
+      entries: [
+        "akka-actor_$scalaVersion"
+        "akka-testkit_$scalaVersion"
+      ]
+    }
+  ]
+}
+----
+
+As is shown, there are 2 sections in the conf file. The `versions` and the `dependencies` section. The `versions` section allows you to define version numbers for dependencies in a single location. In this way you can (potentially) reuse a single version number for different artifacts.
+
+The `dependencies` section is list of dependencies in either:
+
+- `<group_id>:<artifact_id>:<version>` notation
+- a block containing a group of similar artifacts sharing a `group_id` and `version`
+
+
