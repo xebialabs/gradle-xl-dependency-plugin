@@ -42,10 +42,10 @@ class DependencyManagementContainer {
 
     def registerVersionKey(String key, String version) {
         if (!versions[key]) {
-            versions.put(resolve(key), version)
+            versions.put(key, version)
             // Also register the version key on each project, useful with for example $scalaVersion
             projects.each {
-                it.extensions.getByType(ExtraPropertiesExtension).set(key, version)
+                it.extensions.findByType(ExtraPropertiesExtension).set(key, version)
             }
         }
     }
