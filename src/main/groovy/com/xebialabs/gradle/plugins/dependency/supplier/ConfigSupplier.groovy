@@ -49,7 +49,7 @@ abstract class ConfigSupplier implements DependencyManagementSupplier {
                 ConfigObject o = v as ConfigObject
                 String group = o.get("group").unwrapped()
                 String version = o.get("version").unwrapped()
-                (o.get("entries") as ConfigList).forEach({ ConfigValue entry ->
+                (o.get("artifacts") as ConfigList).forEach({ ConfigValue entry ->
                     container.addManagedVersion(group, entry.unwrapped() as String, version)
                 })
 

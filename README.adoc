@@ -91,7 +91,7 @@ dependencyManagement {
     {
       group: "com.typesafe.akka"
       version: "$akkaVersion"
-      entries: [
+      artifacts: [
         "akka-actor_$scalaVersion"
         "akka-testkit_$scalaVersion"
       ]
