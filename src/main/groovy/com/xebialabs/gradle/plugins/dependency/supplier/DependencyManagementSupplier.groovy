@@ -6,4 +6,5 @@ interface DependencyManagementSupplier {
 
     def collectDependencies(DependencyManagementContainer container)
     def collectVersions(DependencyManagementContainer container)
+    def collectExclusions(DependencyManagementContainer container)
 }
