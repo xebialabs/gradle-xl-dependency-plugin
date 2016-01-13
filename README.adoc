@@ -41,7 +41,7 @@ When applied the plugin does the following:
 - An extension named `dependencyManagement` is added to the `rootProject`
 - The `resolutionStrategy` of `allProjects.configurations` is set to resolve versions against this plugin
 
-=== The `xebialabs.dependency` plugin
+=== The 'xebialabs.dependency' plugin
 This plugin builds on top of the `xebialabs.dependency.base` plugin, and adds the opinion that every project should contain a `${rootProject.projectDir}/gradle/dependencies.conf` file, containing versions.
 
 == How it works
@@ -97,14 +97,31 @@ dependencyManagement {
       ]
     }
   ]
+  rewrites {
+    "jdom:jdom": "org.jdom:jdom"
+  }
+  blacklist: [
+    "com.google.collections:google-collections"
+  ]
 }
 ----
 
-As is shown, there are 2 sections in the conf file. The `versions` and the `dependencies` section. The `versions` section allows you to define version numbers for dependencies in a single location. In this way you can (potentially) reuse a single version number for different artifacts.
+As is shown, there are 4 sections in the conf file.
 
-The `dependencies` section is list of dependencies in either:
+=== The 'versions' section
+The `versions` section allows you to define version numbers for dependencies in a single location. In this way you can (potentially) reuse a single version number for different artifacts. It is a map of key-value pairs
+
+=== The 'dependencies' section
+The `dependencies` section is a list of dependencies in either:
 
 - `<group_id>:<artifact_id>:<version>` notation
 - a block containing a group of similar artifacts sharing a `group_id` and `version`
 
+The placeholders in the strings will be replaced with the data coming from the `versions` section.
+Each matching dependency in each configuration of each project will be forced to use the version defined in this block.
 
+=== The 'rewrites' section
+The `rewrites` section contains group:artifact pairs that should be rewritten to a different group:artifact combination. This allows to map moved modules onto their new location.
+
+=== The 'blacklist' section
+The `blacklist` section contains `group` or `group:artifact` entries. All entries listed here will be blacklisted from all configurations of all projects.

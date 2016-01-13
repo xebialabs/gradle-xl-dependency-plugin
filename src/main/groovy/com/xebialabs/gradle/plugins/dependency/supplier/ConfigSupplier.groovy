@@ -4,6 +4,7 @@ import com.typesafe.config.Config
 import com.typesafe.config.ConfigList
 import com.typesafe.config.ConfigValue
 import com.typesafe.config.ConfigValueType
+import com.typesafe.config.impl.ConfigString
 import com.xebialabs.gradle.plugins.dependency.DependencyManagementContainer
 
 abstract class ConfigSupplier implements DependencyManagementSupplier {
@@ -25,6 +26,11 @@ abstract class ConfigSupplier implements DependencyManagementSupplier {
         collectExclusions(getConfig(), container)
     }
 
+    @Override
+    def collectRewrites(DependencyManagementContainer container) {
+        collectRewrites(getConfig(), container)
+    }
+
     def collectDependencies(Config config, DependencyManagementContainer container) {
         if (config.hasPath("dependencyManagement.dependencies")) {
             parseDependencies(config.getList("dependencyManagement.dependencies"), container)
@@ -43,12 +49,19 @@ abstract class ConfigSupplier implements DependencyManagementSupplier {
         }
     }
 
+    def collectRewrites(Config config, DependencyManagementContainer container) {
+        if (config.hasPath("dependencyManagement.rewrites")) {
+            parseRewrites(config.getConfig("dependencyManagement.rewrites"), container)
+        }
+    }
+
     private def parseVersions(Config config, DependencyManagementContainer dependencyManagementContainer) {
         config.entrySet().each { e ->
-            def key = e.key
+            String key = e.key.startsWith("\"") ? e.key[1..-2] : e.key
             dependencyManagementContainer.registerVersionKey(key, e.value.unwrapped() as String)
         }
     }
+
 
     private def parseDependencies(ConfigList list, DependencyManagementContainer container) {
         list.forEach { ConfigValue v ->
@@ -76,6 +89,15 @@ abstract class ConfigSupplier implements DependencyManagementSupplier {
             } else {
                 container.blackList(ga[0], ga[1])
             }
+        }
+    }
+
+    private def parseRewrites(Config config, DependencyManagementContainer container) {
+        config.entrySet().each { e ->
+            String key = e.key.startsWith("\"") ? e.key[1..-2] : e.key
+            def ga = key.split(":")
+            def toGa = (e.value.unwrapped() as String).split(":")
+            container.rewrite(ga[0], ga[1], toGa[0], toGa[1])
         }
     }
 }

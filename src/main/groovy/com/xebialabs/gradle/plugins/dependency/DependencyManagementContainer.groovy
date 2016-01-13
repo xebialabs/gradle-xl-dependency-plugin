@@ -4,6 +4,7 @@ import com.xebialabs.gradle.plugins.dependency.domain.GroupArtifact
 import com.xebialabs.gradle.plugins.dependency.supplier.DependencyManagementSupplier
 import groovy.text.SimpleTemplateEngine
 import org.gradle.api.Project
+import org.gradle.api.artifacts.Configuration
 import org.gradle.api.logging.Logger
 import org.gradle.api.logging.Logging
 import org.gradle.api.plugins.ExtraPropertiesExtension
@@ -11,17 +12,17 @@ import org.gradle.api.plugins.ExtraPropertiesExtension
 class DependencyManagementContainer {
     private static final Logger logger = Logging.getLogger(DependencyManagementContainer.class)
 
-    List<DependencyManagementSupplier> suppliers = []
-    SimpleTemplateEngine engine = new SimpleTemplateEngine()
-    List<Project> projects = []
+    private SimpleTemplateEngine engine = new SimpleTemplateEngine()
+    private List<DependencyManagementSupplier> suppliers = []
+    private List<Project> projects = []
 
     Map versions = [:].withDefault { "" }
     Map managedVersions = [:]
-    List<GroupArtifact> blackList
+    List<GroupArtifact> blackList = []
+    Map rewrites = [:]
 
     DependencyManagementContainer(Project project) {
         projects.addAll(project.allprojects)
-
     }
 
     def resolveIfNecessary() {
@@ -40,6 +41,8 @@ class DependencyManagementContainer {
 //        suppliers.add(supplier)
         supplier.collectVersions(this)
         supplier.collectDependencies(this)
+        supplier.collectExclusions(this)
+        supplier.collectRewrites(this)
     }
 
     def registerVersionKey(String key, String version) {
@@ -69,10 +72,17 @@ class DependencyManagementContainer {
     }
 
     def resolve(String s) {
-        return engine.createTemplate(s).make(versions).toString()
+        return s ? engine.createTemplate(s).make(versions).toString() : s
     }
 
     def blackList(String group, String artifact) {
-        this.blackList.add(new GroupArtifact(resolve(group), resolve(artifact)))
+        def ga = new GroupArtifact(resolve(group), resolve(artifact))
+        projects*.configurations*.each { Configuration config ->
+            config.exclude ga.toMap()
+        }
+    }
+
+    def rewrite(String fromGroup, String fromArtifact, String toGroup, String toArtifact) {
+        this.rewrites.put(new GroupArtifact(fromGroup, fromArtifact), new GroupArtifact(toGroup, toArtifact))
     }
 }

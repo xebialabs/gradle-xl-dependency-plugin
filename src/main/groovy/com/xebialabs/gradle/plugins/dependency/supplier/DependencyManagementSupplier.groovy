@@ -7,4 +7,5 @@ interface DependencyManagementSupplier {
     def collectDependencies(DependencyManagementContainer container)
     def collectVersions(DependencyManagementContainer container)
     def collectExclusions(DependencyManagementContainer container)
+    def collectRewrites(DependencyManagementContainer container)
 }

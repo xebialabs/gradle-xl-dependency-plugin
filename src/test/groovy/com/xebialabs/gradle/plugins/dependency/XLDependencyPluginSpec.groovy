@@ -89,7 +89,7 @@ dependencyManagement.dependencies: [
     {
         group: "ch.qos.logback"
         version: "1.1.3"
-        entries: [ "logback-classic", "logback-core" ]
+        artifacts: [ "logback-classic", "logback-core" ]
     }
 ]""")
 
@@ -132,6 +132,62 @@ dependencyManagement.dependencies: [
         then:
         files.size() >= 1
         files.collect { it.name }.contains('junit-4.12.jar')
+    }
+
+    def "should rewrite dependencies"() {
+        given:
+        writeFile(project.file("dependencies.conf"), """
+dependencyManagement.rewrites {
+    "foo:bar": "ch.qos.logback:logback-core"
+}""")
+
+        project.apply plugin: "xebialabs.dependency"
+        project.apply plugin: "java"
+
+        project.dependencyManagement {
+            importConf project.file("dependencies.conf")
+        }
+
+        project.dependencies {
+            compile "foo:bar:1.1.3"
+        }
+
+        when:
+        def files = project.configurations.compile.resolve()
+
+        then:
+        files.size() >= 1
+        files.collect { it.name }.contains('logback-core-1.1.3.jar')
+    }
+
+    def "should exclude dependencies"() {
+        given:
+        writeFile(project.file("dependencies.conf"), """
+dependencyManagement.dependencies: [
+    "junit:junit:\$junitVersion"
+]
+dependencyManagement.blacklist: [
+    "org.hamcrest"
+]""")
+
+        project.apply plugin: "xebialabs.dependency"
+        project.apply plugin: "java"
+
+        project.dependencyManagement {
+            importConf project.file("dependencies.conf")
+        }
+
+        project.dependencies {
+            compile "junit:junit"
+        }
+
+        when:
+        def files = project.configurations.compile.resolve()
+
+        then:
+        files.size() == 1
+        files.collect { it.name }.contains('junit-4.12.jar')
+        !files.collect { it.name }.contains('hamcrest-core-1.1.3.jar')
     }
 
     private def writeFile(File file, String content) {
