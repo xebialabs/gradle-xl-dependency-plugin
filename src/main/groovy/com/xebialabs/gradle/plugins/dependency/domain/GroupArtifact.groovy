@@ -48,4 +48,10 @@ class GroupArtifact {
         result = 31 * result + (artifact != null ? artifact.hashCode() : 0)
         return result
     }
+
+
+    @Override
+    public String toString() {
+        return "GroupArtifact($group:$artifact)"
+    }
 }
