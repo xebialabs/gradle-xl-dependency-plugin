@@ -1,11 +1,10 @@
-package com.xebialabs.gradle.plugins.dependency.supplier
+package com.xebialabs.gradle.dependency.supplier
 
 import com.typesafe.config.Config
 import com.typesafe.config.ConfigList
 import com.typesafe.config.ConfigValue
 import com.typesafe.config.ConfigValueType
-import com.typesafe.config.impl.ConfigString
-import com.xebialabs.gradle.plugins.dependency.DependencyManagementContainer
+import com.xebialabs.gradle.dependency.DependencyManagementContainer
 
 abstract class ConfigSupplier implements DependencyManagementSupplier {
 

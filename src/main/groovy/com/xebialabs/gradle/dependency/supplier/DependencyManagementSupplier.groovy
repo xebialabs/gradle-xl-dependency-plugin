@@ -1,6 +1,6 @@
-package com.xebialabs.gradle.plugins.dependency.supplier
+package com.xebialabs.gradle.dependency.supplier
 
-import com.xebialabs.gradle.plugins.dependency.DependencyManagementContainer
+import com.xebialabs.gradle.dependency.DependencyManagementContainer
 
 interface DependencyManagementSupplier {
 

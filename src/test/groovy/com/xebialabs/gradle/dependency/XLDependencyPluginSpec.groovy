@@ -1,4 +1,4 @@
-package com.xebialabs.gradle.plugins.dependency
+package com.xebialabs.gradle.dependency
 
 import org.gradle.api.Project
 import org.gradle.api.plugins.ExtraPropertiesExtension

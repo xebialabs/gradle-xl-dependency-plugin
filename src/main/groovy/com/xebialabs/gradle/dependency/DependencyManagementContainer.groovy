@@ -1,7 +1,7 @@
-package com.xebialabs.gradle.plugins.dependency
+package com.xebialabs.gradle.dependency
 
-import com.xebialabs.gradle.plugins.dependency.domain.GroupArtifact
-import com.xebialabs.gradle.plugins.dependency.supplier.DependencyManagementSupplier
+import com.xebialabs.gradle.dependency.domain.GroupArtifact
+import com.xebialabs.gradle.dependency.supplier.DependencyManagementSupplier
 import groovy.text.SimpleTemplateEngine
 import org.gradle.api.Project
 import org.gradle.api.artifacts.Configuration

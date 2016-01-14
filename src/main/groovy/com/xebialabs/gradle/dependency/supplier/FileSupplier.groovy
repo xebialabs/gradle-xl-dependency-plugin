@@ -1,4 +1,4 @@
-package com.xebialabs.gradle.plugins.dependency.supplier
+package com.xebialabs.gradle.dependency.supplier
 
 import com.typesafe.config.Config
 import com.typesafe.config.ConfigFactory

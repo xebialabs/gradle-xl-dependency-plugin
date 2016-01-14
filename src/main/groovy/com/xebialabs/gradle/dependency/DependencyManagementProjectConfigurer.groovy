@@ -1,6 +1,6 @@
-package com.xebialabs.gradle.plugins.dependency
+package com.xebialabs.gradle.dependency
 
-import com.xebialabs.gradle.plugins.dependency.domain.GroupArtifact
+import com.xebialabs.gradle.dependency.domain.GroupArtifact
 import org.gradle.api.Action
 import org.gradle.api.Project
 import org.gradle.api.artifacts.Configuration

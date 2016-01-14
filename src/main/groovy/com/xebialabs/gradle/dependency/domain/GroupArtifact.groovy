@@ -1,6 +1,5 @@
-package com.xebialabs.gradle.plugins.dependency.domain
+package com.xebialabs.gradle.dependency.domain
 
-import org.gradle.api.artifacts.DependencyResolveDetails
 import org.gradle.api.artifacts.ModuleVersionSelector
 
 class GroupArtifact {

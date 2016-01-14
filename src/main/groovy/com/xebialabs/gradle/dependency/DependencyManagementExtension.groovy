@@ -1,7 +1,7 @@
-package com.xebialabs.gradle.plugins.dependency
+package com.xebialabs.gradle.dependency
 
-import com.xebialabs.gradle.plugins.dependency.supplier.DependencySupplier
-import com.xebialabs.gradle.plugins.dependency.supplier.FileSupplier
+import com.xebialabs.gradle.dependency.supplier.DependencySupplier
+import com.xebialabs.gradle.dependency.supplier.FileSupplier
 import org.gradle.api.GradleException
 import org.gradle.api.Project
 
