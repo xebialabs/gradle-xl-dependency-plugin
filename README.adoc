@@ -1,5 +1,5 @@
 = Gradle XebiaLabs Dependency Management Plugin
-:plugin_version: 0.1.0
+:plugin_version: 1.0.0
 :source-highlighter: pygments
 
 This is the Gradle XebiaLabs Dependency Management plugin. When applied to your Gradle project it will be possible to omit version numbers from the specified dependencies, and have them come from imported dependency specification files.
