@@ -74,3 +74,16 @@ if (JavaVersion.current().isJava8Compatible()) {
         options.addStringOption('Xdoclint:none', '-quiet')
     }
 }
+
+uploadArchives {
+    repositories.mavenDeployer {
+        repository(url: "${project.property("nexusBaseUrl")}/repositories/releases") {
+            authentication(userName: "${project.property("nexusUserName")}", password: "${project.property("nexusPassword")}")
+        }
+        snapshotRepository(url: "${project.property("nexusBaseUrl")}/repositories/snapshots") {
+            authentication(userName: "${project.property("nexusUserName")}", password: "${project.property("nexusPassword")}")
+        }
+    }
+}
+
+tasks.release.dependsOn([build, uploadArchives])
