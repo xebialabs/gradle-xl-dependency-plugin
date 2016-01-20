@@ -1,6 +1,8 @@
 package com.xebialabs.gradle.dependency
 
+import org.gradle.api.GradleException
 import org.gradle.api.Project
+import org.gradle.api.internal.plugins.PluginApplicationException
 import org.gradle.api.plugins.ExtraPropertiesExtension
 import org.gradle.testfixtures.ProjectBuilder
 import org.junit.Rule
@@ -32,6 +34,20 @@ class XLDependencyPluginSpec extends Specification {
                 url "file://${repoDir}"
             }
         }
+    }
+
+    def "it should fail to apply when 'gradle/dependencies.conf' is missing"() {
+        given:
+        def missingProject = ProjectBuilder.builder().withProjectDir(temporaryFolder.newFolder("missing-depconf")).build()
+
+        when:
+        missingProject.apply plugin: 'xebialabs.dependency'
+
+        then:
+        def ex = thrown(GradleException)
+        ex.getClass() == PluginApplicationException
+        ex.getCause().getClass() == FileNotFoundException
+        ex.getCause().getMessage() =~ "Cannot configure dependency management from non-existing file .*/gradle/dependencies.conf"
     }
 
     def "should apply the version override file from the rootProject"() {
@@ -80,6 +96,31 @@ dependencyManagement.dependencies: [
         then:
         files.size() >= 1
         files.collect { it.name }.contains('junit-4.12.jar')
+    }
+
+    def "should override version from applied 'gradle/dependencies.conf' with project property"() {
+        given:
+        project.ext.setProperty('dependencyManagement.versions.junitVersion', '4.11')
+        writeFile(project.file("dependencies.conf"), """
+dependencyManagement.dependencies: [
+    "junit:junit:\$junitVersion"
+]""")
+
+        project.apply plugin: "xebialabs.dependency"
+        project.apply plugin: "java"
+        project.dependencyManagement {
+            importConf project.file("dependencies.conf")
+        }
+        project.dependencies {
+            compile "junit:junit"
+        }
+
+        when:
+        def files = project.configurations.compile.resolve()
+
+        then:
+        files.size() >= 1
+        files.collect { it.name }.contains('junit-4.11.jar')
     }
 
     def "should apply a dependencies file with a dependency-set local to the project"() {

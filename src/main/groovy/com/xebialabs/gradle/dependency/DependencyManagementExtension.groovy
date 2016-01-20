@@ -1,5 +1,6 @@
 package com.xebialabs.gradle.dependency
 
+import com.xebialabs.gradle.dependency.supplier.DependencyManagementSupplier
 import com.xebialabs.gradle.dependency.supplier.DependencySupplier
 import com.xebialabs.gradle.dependency.supplier.FileSupplier
 import org.gradle.api.GradleException
@@ -15,12 +16,16 @@ class DependencyManagementExtension {
         this.container = container
     }
 
+    def supplier(DependencyManagementSupplier dms) {
+        container.addSupplier(dms)
+    }
+
     def importConf(File f) {
         if (f.exists()) {
             project.logger.info("Added dependency management file: $f")
             container.addSupplier(new FileSupplier(f))
         } else {
-            throw new GradleException("Could not locate $f")
+            throw new FileNotFoundException("Cannot configure dependency management from non-existing file $f")
         }
     }
 

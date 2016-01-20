@@ -42,7 +42,10 @@ When applied the plugin does the following:
 - The `resolutionStrategy` of `allProjects.configurations` is set to resolve versions against this plugin
 
 === The 'xebialabs.dependency' plugin
-This plugin builds on top of the `xebialabs.dependency.base` plugin, and adds the opinion that every project should contain a `${rootProject.projectDir}/gradle/dependencies.conf` file, containing versions.
+This plugin builds on top of the `xebialabs.dependency.base` plugin, and adds the following opinions on top of the `xebialabs.dependency.base` plugin:
+
+1. It will take any overridden versions defined on the `rootProject` (See: <<Version keys as project properties>>)
+2. It will load a `${rootProject.projectDir}/gradle/dependencies.conf` file which is required to be present
 
 == How it works
 Using the `dependencyManagement` extension it is possible to import configuration files containing dependency information.
@@ -73,6 +76,7 @@ dependencies {
 
 }
 ----
+
 
 == The file format
 The plugin reads the dependency management specification from a https://github.com/typesafehub/config[HOCON] file. The format of the HOCON file should be the following:
@@ -109,7 +113,7 @@ dependencyManagement {
 As is shown, there are 4 sections in the conf file.
 
 === The 'versions' section
-The `versions` section allows you to define version numbers for dependencies in a single location. In this way you can (potentially) reuse a single version number for different artifacts. It is a map of key-value pairs
+The `versions` section allows you to refer to a version number using a name. In this way you can (potentially) reuse a single version number for different related artifacts. It is a map of key-value pairs.
 
 === The 'dependencies' section
 The `dependencies` section is a list of dependencies in either:
@@ -125,3 +129,56 @@ The `rewrites` section contains group:artifact pairs that should be rewritten to
 
 === The 'blacklist' section
 The `blacklist` section contains `group` or `group:artifact` entries. All entries listed here will be blacklisted from all configurations of all projects.
+
+== Advanced use
+
+=== Version keys as project properties
+It is possible to define named versions using project properties. The project property should be of the format: `dependencyManagement.versions.<name>` in order to be picked up. See for instance the following example:
+
+[source]
+.reference.conf
+----
+dependencyManagement {
+  versions {
+    junitVersion: "4.12"
+  }
+  dependencies: [
+    "junit:junit:$junitVersion"
+  ]
+}
+----
+
+[source]
+.build.gradle
+----
+apply plugin: 'xebialabs.dependency.base'
+apply plugin: 'java'
+
+dependencyManagement {
+  supplier com.xebialabs.gradle.dependency.supplier.ProjectSupplier(project)
+  importConf project.file('reference.conf')
+}
+
+dependencies {
+  testCompile 'junit:junit'
+}
+----
+
+If you would launch gradle now using the following command line: `gradle build -PdependencyManagement.versions.junitVersion=4.11`, it would force junit to the `4.11` version instead of the 4.12 specified in the `reference.conf` file.
+
+The `xebialabs.dependency` plugin takes care of this automatically.
+
+=== Adding your own supplier
+It is possible to add your own `DependencyManagementSupplier` that will supply the dependency management information to the plugin. You can do so by extending the `com.xebialabs.gradle.dependency.supplier.DependencyManagementSupplier`.
+
+You can add your own supplier to your build.gradle file using the following snippet:
+
+[source]
+.build.gradle
+----
+apply plugin: 'xebialabs.dependency.base'
+
+dependencyManagement {
+  supplier <your class>
+}
+----
