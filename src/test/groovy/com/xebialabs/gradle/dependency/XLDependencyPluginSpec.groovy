@@ -74,6 +74,28 @@ class XLDependencyPluginSpec extends Specification {
         project.extensions.getByType(ExtraPropertiesExtension).get("overthereVersion") == "4.2.0"
     }
 
+    def "should substitute placeholders"() {
+        given:
+        writeFile(project.file("reference.conf"), '''
+            someProperty: "4.0"
+            dependencyManagement {
+                versions {
+                    junitVersion: ${someProperty}
+                }
+            }
+        ''')
+        project.apply plugin: "xebialabs.dependency"
+
+        when:
+        project.dependencyManagement {
+            importConf project.file("reference.conf")
+        }
+
+        then:
+        project.extensions.getByType(ExtraPropertiesExtension).has("junitVersion")
+        project.extensions.getByType(ExtraPropertiesExtension).get("junitVersion") == "4.12"
+    }
+
     def "should apply a dependencies file with a dependency local to the project"() {
         given:
         writeFile(project.file("dependencies.conf"), """

@@ -13,7 +13,7 @@ class FileSupplier extends ConfigSupplier {
 
     Config getConfig() {
         if (!config) {
-            config = ConfigFactory.parseFile(file)
+            config = ConfigFactory.parseFile(file).resolve()
         }
         return config
     }

@@ -19,7 +19,6 @@ buildscript {
             password nexusPassword
         }
     }
-
   }
 
   dependencies {
@@ -63,7 +62,7 @@ apply plugin: 'xebialabs.dependency'
 
 dependencyManagement {
   importConf rootProject.file("path/to/hocon.conf")
-  importConf "com.xebialabs.xlplatform:reference:1.0"
+  importConf "com.xebialabs.xl-platform:xl-reference:${xlPlatformVersion}"
 }
 
 repositories {
@@ -73,13 +72,12 @@ repositories {
 dependencies {
   compile "com.typesafe.akka:akka-actor_$scalaVersion"
   testCompile "junit:junit"
-
 }
 ----
 
 
 == The file format
-The plugin reads the dependency management specification from a https://github.com/typesafehub/config[HOCON] file. The format of the HOCON file should be the following:
+The plugin reads the dependency management specification from a https://github.com/typesafehub/config[HOCON] file. Substitutions are allowed inside one file, not across multiple files. The format of the HOCON file should be the following:
 
 [source,subs='verbatim,attributes']
 .reference.conf

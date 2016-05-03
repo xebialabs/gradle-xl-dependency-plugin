@@ -20,7 +20,7 @@ class DependencySupplier extends ConfigSupplier {
             def dependency = project.dependencies.create(dependency + "@conf")
             def resolve = project.configurations.detachedConfiguration(dependency).resolve()
             assert resolve.size() == 1 : "Dependency ${dependency} resulted in more than 1 file: $resolve"
-            config = ConfigFactory.parseFile(resolve.find())
+            config = ConfigFactory.parseFile(resolve.find()).resolve()
         }
         return config
     }
