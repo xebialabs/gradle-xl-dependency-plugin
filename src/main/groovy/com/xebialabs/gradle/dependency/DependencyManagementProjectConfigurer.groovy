@@ -14,9 +14,11 @@ class DependencyManagementProjectConfigurer {
 
     static def configureProject(Project project, DependencyManagementContainer container) {
         project.configurations.all { Configuration config ->
-            config.resolutionStrategy { ResolutionStrategy rs ->
-                rs.eachDependency(rewrite(project, container))
-                rs.eachDependency(forceVersion(project, container))
+            if (config.name != 'zinc') { // The Scala compiler 'zinc' configuration should not be managed by us
+                config.resolutionStrategy { ResolutionStrategy rs ->
+                    rs.eachDependency(rewrite(project, container))
+                    rs.eachDependency(forceVersion(project, container))
+                }
             }
         }
 
