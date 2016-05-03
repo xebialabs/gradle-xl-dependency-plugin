@@ -6,14 +6,14 @@ import org.gradle.api.Project
 
 class XLDependencyPlugin implements Plugin<Project> {
 
-    @Override
-    void apply(Project project) {
-        project.apply plugin: "xebialabs.dependency.base"
+  @Override
+  void apply(Project project) {
+    project.apply plugin: "xebialabs.dependency.base"
 
-        project.dependencyManagement {
-            supplier new ProjectSupplier(project)
-            importConf project.file("gradle/dependencies.conf")
-        }
-
+    project.dependencyManagement {
+      supplier new ProjectSupplier(project)
+      importConf project.file("gradle/dependencies.conf")
     }
+
+  }
 }
