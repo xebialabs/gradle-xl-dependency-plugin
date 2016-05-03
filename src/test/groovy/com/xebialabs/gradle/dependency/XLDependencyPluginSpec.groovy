@@ -19,9 +19,16 @@ class XLDependencyPluginSpec extends Specification {
 
     def setup() {
         def projectDir = temporaryFolder.newFolder("test-project")
+        // create the project local gradle/dependencies.conf
         def folder = new File(projectDir, "gradle")
         folder.mkdir()
-        writeFile(new File(folder, "dependencies.conf"), "dependencyManagement { versions { junitVersion: \"4.12\" } }")
+        writeFile(new File(folder, "dependencies.conf"), '''
+          dependencyManagement {
+            versions {
+              junitVersion: "4.12"
+            }
+          }
+          ''')
         project = ProjectBuilder.builder().withProjectDir(projectDir).build()
         def repoDir = temporaryFolder.newFolder("repo")
 
@@ -59,19 +66,42 @@ class XLDependencyPluginSpec extends Specification {
         project.extensions.getByType(ExtraPropertiesExtension).get("junitVersion") == "4.12"
     }
 
-    def "should apply a versions file from the currently built project"() {
+    def "should apply a reference file from the currently built project"() {
         given:
-        writeFile(project.file("extra-versions.conf"), "dependencyManagement { versions { overthereVersion: \"4.2.0\" } }")
+        writeFile(project.file("reference.conf"), "dependencyManagement { versions { overthereVersion: \"4.2.0\" } }")
         project.apply plugin: "xebialabs.dependency"
 
         when:
         project.dependencyManagement {
-                importConf project.file("extra-versions.conf")
+            importConf project.file("reference.conf")
         }
 
         then:
         project.extensions.getByType(ExtraPropertiesExtension).has("overthereVersion")
         project.extensions.getByType(ExtraPropertiesExtension).get("overthereVersion") == "4.2.0"
+        project.extensions.getByType(ExtraPropertiesExtension).has("junitVersion")
+        project.extensions.getByType(ExtraPropertiesExtension).get("junitVersion") == "4.12"
+    }
+
+    def "should take version from gradle/dependencies.conf over reference.conf"() {
+        given:
+        writeFile(project.file("reference.conf"), '''
+            dependencyManagement {
+                versions {
+                    junitVersion: "4.0"
+                }
+            }
+        ''')
+        project.apply plugin: "xebialabs.dependency"
+
+        when:
+        project.dependencyManagement {
+            importConf project.file("reference.conf")
+        }
+
+        then:
+        project.extensions.getByType(ExtraPropertiesExtension).has("junitVersion")
+        project.extensions.getByType(ExtraPropertiesExtension).get("junitVersion") == "4.12"
     }
 
     def "should substitute placeholders"() {
@@ -98,10 +128,11 @@ class XLDependencyPluginSpec extends Specification {
 
     def "should apply a dependencies file with a dependency local to the project"() {
         given:
-        writeFile(project.file("dependencies.conf"), """
-dependencyManagement.dependencies: [
-    "junit:junit:\$junitVersion"
-]""")
+        writeFile(project.file("dependencies.conf"), '''
+            dependencyManagement.dependencies: [
+                "junit:junit:$junitVersion"
+            ]
+        ''')
 
         project.apply plugin: "xebialabs.dependency"
         project.apply plugin: "java"
@@ -123,10 +154,11 @@ dependencyManagement.dependencies: [
     def "should override version from applied 'gradle/dependencies.conf' with project property"() {
         given:
         project.ext.setProperty('dependencyManagement.versions.junitVersion', '4.11')
-        writeFile(project.file("dependencies.conf"), """
-dependencyManagement.dependencies: [
-    "junit:junit:\$junitVersion"
-]""")
+        writeFile(project.file("dependencies.conf"), '''
+            dependencyManagement.dependencies: [
+                "junit:junit:$junitVersion"
+            ]
+        ''')
 
         project.apply plugin: "xebialabs.dependency"
         project.apply plugin: "java"
@@ -147,14 +179,15 @@ dependencyManagement.dependencies: [
 
     def "should apply a dependencies file with a dependency-set local to the project"() {
         given:
-        writeFile(project.file("dependencies.conf"), """
-dependencyManagement.dependencies: [
-    {
-        group: "ch.qos.logback"
-        version: "1.1.3"
-        artifacts: [ "logback-classic", "logback-core" ]
-    }
-]""")
+        writeFile(project.file("dependencies.conf"), '''
+            dependencyManagement.dependencies: [
+                {
+                    group: "ch.qos.logback"
+                    version: "1.1.3"
+                    artifacts: [ "logback-classic", "logback-core" ]
+                }
+            ]
+        ''')
 
         project.apply plugin: "xebialabs.dependency"
         project.apply plugin: "java"
@@ -202,10 +235,11 @@ dependencyManagement.dependencies: [
 
     def "should resolve dependencies artifact"() {
         given:
-        writeFile(new File(artifactDir, "dependencies-1.0-depmgmt.conf"), """
-dependencyManagement.dependencies: [
-    "junit:junit:\$junitVersion"
-]""")
+        writeFile(new File(artifactDir, "dependencies-1.0-depmgmt.conf"), '''
+            dependencyManagement.dependencies: [
+                "junit:junit:$junitVersion"
+            ]
+        ''')
         project.apply plugin: "xebialabs.dependency"
         project.apply plugin: "java"
         project.dependencyManagement {
@@ -226,10 +260,11 @@ dependencyManagement.dependencies: [
 
     def "should rewrite dependencies"() {
         given:
-        writeFile(project.file("dependencies.conf"), """
-dependencyManagement.rewrites {
-    "foo:bar": "ch.qos.logback:logback-core"
-}""")
+        writeFile(project.file("dependencies.conf"), '''
+            dependencyManagement.rewrites {
+                "foo:bar": "ch.qos.logback:logback-core"
+            }
+        ''')
 
         project.apply plugin: "xebialabs.dependency"
         project.apply plugin: "java"
@@ -252,13 +287,14 @@ dependencyManagement.rewrites {
 
     def "should exclude dependencies"() {
         given:
-        writeFile(project.file("dependencies.conf"), """
-dependencyManagement.dependencies: [
-    "junit:junit:\$junitVersion"
-]
-dependencyManagement.blacklist: [
-    "org.hamcrest"
-]""")
+        writeFile(project.file("dependencies.conf"), '''
+            dependencyManagement.dependencies: [
+                "junit:junit:$junitVersion"
+            ]
+            dependencyManagement.blacklist: [
+                "org.hamcrest"
+            ]
+         ''')
 
         project.apply plugin: "xebialabs.dependency"
         project.apply plugin: "java"
