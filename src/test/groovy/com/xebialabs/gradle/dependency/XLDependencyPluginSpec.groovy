@@ -151,6 +151,33 @@ dependencyManagement.dependencies: [
         files.collect { it.name }.contains('logback-core-1.1.3.jar')
     }
 
+    def "should resolve a zip dependency"() {
+        given:
+        writeFile(project.file("dependencies.conf"), '''
+            dependencyManagement {
+                dependencies: [ "test:dependencies:1.0@zip" ]
+            }
+        ''')
+        writeFile(new File(artifactDir, "dependencies-1.0.zip"), '');
+
+
+        project.apply plugin: "xebialabs.dependency"
+        project.apply plugin: "java"
+        project.dependencyManagement {
+            importConf project.file("dependencies.conf")
+        }
+        project.dependencies {
+            compile 'test:dependencies@zip'
+        }
+
+        when:
+        def files = project.configurations.compile.resolve()
+
+        then:
+        files.size() >= 1
+        files.collect { it.name }.contains('dependencies-1.0.zip')
+    }
+
     def "should resolve dependencies artifact"() {
         given:
         writeFile(new File(artifactDir, "dependencies-1.0-depmgmt.conf"), """

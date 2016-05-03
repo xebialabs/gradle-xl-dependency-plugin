@@ -65,7 +65,7 @@ abstract class ConfigSupplier implements DependencyManagementSupplier {
     private def parseDependencies(ConfigList list, DependencyManagementContainer container) {
         list.forEach { ConfigValue v ->
             if (v.valueType() == ConfigValueType.STRING) {
-                def gav = (v.unwrapped() as String).split(':')
+                def gav = (v.unwrapped() as String).split('[:@]')
                 container.addManagedVersion(gav[0], gav[1], gav[2])
             }
             else if (v.valueType() == ConfigValueType.OBJECT) {
