@@ -285,7 +285,7 @@ class XLDependencyPluginSpec extends Specification {
     files.collect { it.name }.contains('logback-core-1.1.3.jar')
   }
 
-  def "should exclude dependencies"() {
+  def "should blacklist dependencies"() {
     given:
     writeFile(project.file("dependencies.conf"), '''
       dependencyManagement.dependencies: [

@@ -5,8 +5,11 @@ import com.typesafe.config.ConfigList
 import com.typesafe.config.ConfigValue
 import com.typesafe.config.ConfigValueType
 import com.xebialabs.gradle.dependency.DependencyManagementContainer
+import org.gradle.api.logging.Logger
+import org.gradle.api.logging.Logging
 
 abstract class ConfigSupplier implements DependencyManagementSupplier {
+  private static final Logger logger = Logging.getLogger(DependencyManagementContainer.class)
 
   abstract Config getConfig()
 

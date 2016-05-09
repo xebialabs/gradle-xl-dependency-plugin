@@ -77,8 +77,22 @@ class DependencyManagementContainer {
 
   def blackList(String group, String artifact) {
     def ga = new GroupArtifact(resolve(group), resolve(artifact))
-    projects*.configurations*.each { Configuration config ->
-      config.exclude ga.toMap()
+    projects.each { p ->
+      // at this point the configurations of sub projects are empty, so need to afterEvaluate
+      p.afterEvaluate {
+        logger.debug("blacklisting artifacts in cfgs=$p.configurations")
+
+        p.configurations.each { Configuration config ->
+          // another problem is that the configuration may be resolved at this point so we cannot operate on it
+          if (config.getState() == Configuration.State.UNRESOLVED) {
+            logger.debug("$config excluding ${ga.toMap()}")
+            config.exclude ga.toMap()
+          } else {
+            // TODO: I'd like to warn but that spams the build incredibly
+            logger.info("$config already resolved. Unable to exclude $group:$artifact")
+          }
+        }
+      }
     }
   }
 
