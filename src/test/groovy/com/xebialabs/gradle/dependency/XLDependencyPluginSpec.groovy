@@ -1,185 +1,248 @@
 package com.xebialabs.gradle.dependency
 
-import org.gradle.api.GradleException
-import org.gradle.api.Project
-import org.gradle.api.internal.plugins.PluginApplicationException
-import org.gradle.api.plugins.ExtraPropertiesExtension
-import org.gradle.testfixtures.ProjectBuilder
-import org.junit.Rule
-import org.junit.rules.TemporaryFolder
-import spock.lang.Specification
+import nebula.test.IntegrationSpec
+import nebula.test.dependencies.DependencyGraph
+import nebula.test.dependencies.GradleDependencyGenerator
 
-class XLDependencyPluginSpec extends Specification {
+class XLDependencyPluginSpec extends IntegrationSpec {
 
-  @Rule
-  TemporaryFolder temporaryFolder
-
-  Project project
   File artifactDir
+  File repoDir
 
   def setup() {
-    def projectDir = temporaryFolder.newFolder("test-project")
     // create the project local gradle/dependencies.conf
-    def folder = new File(projectDir, "gradle")
-    folder.mkdir()
-    writeFile(new File(folder, "dependencies.conf"), '''
+    createFile("dependencies.conf", directory('gradle')) << '''
       dependencyManagement {
         versions {
           junitVersion: "4.12"
         }
       }
-    ''')
-    project = ProjectBuilder.builder().withProjectDir(projectDir).build()
-    def repoDir = temporaryFolder.newFolder("repo")
+    '''
 
-    artifactDir = new File(repoDir, "test/dependencies/1.0")
-    artifactDir.mkdirs()
+    // TODO: the repo is never cleaned
+    def graph = new DependencyGraph(['commons-lang:commons-lang:2.5',
+                                     'commons-lang:commons-lang:2.6',
+                                     'ch.qos.logback:logback-core:1.1.3',
+                                     'org.hamcrest:hamcrest-core:1.1.2',
+                                     'org.hamcrest:hamcrest-core:1.1.3',
+                                     'com.netflix.nebula:nebula-test:3.1.0 -> commons-lang:commons-lang:2.6',
+                                     'junit:junit:4.11 -> org.hamcrest:hamcrest-core:1.1.2',
+                                     'junit:junit:4.12 -> org.hamcrest:hamcrest-core:1.1.3'])
+    def generator = new GradleDependencyGenerator(graph)
+    repoDir = generator.generateTestMavenRepo()
+    createFile('zip-dependency-1.0.zip', directory('test/zip-dependency/1.0', repoDir))
 
+    repoDir.eachFileRecurse {
+      println it
+    }
+  }
+
+  def configureRepositories(project) {
     project.repositories {
-      mavenCentral()
       maven {
-        url "file://${repoDir}"
+        url "file://${repoDir.getAbsolutePath()}"
       }
     }
   }
 
-  def "it should fail to apply when 'gradle/dependencies.conf' is missing"() {
+  def "should apply the version override file from the rootProject"() {
     given:
-    def missingProject = ProjectBuilder.builder().withProjectDir(temporaryFolder.newFolder("missing-depconf")).build()
+    buildFile << """
+    apply plugin: 'xebialabs.dependency'
 
+    repositories {
+      maven {
+        url "file://${repoDir.getAbsolutePath()}"
+      }
+    }
+
+    assert junitVersion == '4.12'
+    """
     when:
-    missingProject.apply plugin: 'xebialabs.dependency'
+    runTasksSuccessfully('build')
 
     then:
-    def ex = thrown(GradleException)
-    ex.getClass() == PluginApplicationException
-    ex.getCause().getClass() == FileNotFoundException
-    ex.getCause().getMessage() =~ "Cannot configure dependency management from non-existing file .*/gradle/dependencies.conf"
+    noExceptionThrown()
   }
 
-  def "should apply the version override file from the rootProject"() {
+  def "should apply the version override file from the rootProject in a sub project"() {
+    given:
+    settingsFile << "include 'sub'"
+    buildFile << """
+    apply plugin: 'xebialabs.dependency'
+
+    assert allprojects.size() == 2
+    allprojects {
+      repositories {
+        maven {
+          url "file://${repoDir.getAbsolutePath()}"
+        }
+      }
+      assert junitVersion == '4.12'
+    }
+    """
     when:
-    project.apply plugin: "xebialabs.dependency"
+    runTasksSuccessfully('build')
 
     then:
-    project.extensions.getByType(ExtraPropertiesExtension).has("junitVersion")
-    project.extensions.getByType(ExtraPropertiesExtension).get("junitVersion") == "4.12"
+    noExceptionThrown()
   }
 
   def "should apply a reference file from the currently built project"() {
     given:
-    writeFile(project.file("reference.conf"), "dependencyManagement { versions { overthereVersion: \"4.2.0\" } }")
-    project.apply plugin: "xebialabs.dependency"
+    buildFile << """
+      apply plugin: 'xebialabs.dependency'
 
+      repositories {
+        maven {
+          url "file://${repoDir.getAbsolutePath()}"
+        }
+      }
+      dependencyManagement {
+        importConf project.file("reference.conf")
+      }
+      assert junitVersion == '4.12'
+      assert overthereVersion == '4.2.0'
+    """
+    createFile("reference.conf") << '''
+      dependencyManagement {
+        versions {
+          overthereVersion: "4.2.0"
+        }
+      }
+    '''
     when:
-    project.dependencyManagement {
-      importConf project.file("reference.conf")
-    }
+    runTasksSuccessfully('build')
 
     then:
-    project.extensions.getByType(ExtraPropertiesExtension).has("overthereVersion")
-    project.extensions.getByType(ExtraPropertiesExtension).get("overthereVersion") == "4.2.0"
-    project.extensions.getByType(ExtraPropertiesExtension).has("junitVersion")
-    project.extensions.getByType(ExtraPropertiesExtension).get("junitVersion") == "4.12"
+    noExceptionThrown()
   }
 
   def "should take version from gradle/dependencies.conf over reference.conf"() {
-    given:
-    writeFile(project.file("reference.conf"), '''
-      dependencyManagement {
-        versions {
-          junitVersion: "4.0"
+    buildFile << """
+      apply plugin: 'xebialabs.dependency'
+
+      repositories {
+        maven {
+          url "file://${repoDir.getAbsolutePath()}"
         }
       }
-    ''')
-    project.apply plugin: "xebialabs.dependency"
-
+      dependencyManagement {
+        importConf project.file("reference.conf")
+      }
+      assert junitVersion == '4.12'
+    """
+    createFile("reference.conf") << '''
+      dependencyManagement {
+        versions {
+          junitVersion = "4.0"
+        }
+      }
+    '''
     when:
-    project.dependencyManagement {
-      importConf project.file("reference.conf")
-    }
+    runTasksSuccessfully('build')
 
     then:
-    project.extensions.getByType(ExtraPropertiesExtension).has("junitVersion")
-    project.extensions.getByType(ExtraPropertiesExtension).get("junitVersion") == "4.12"
+    noExceptionThrown()
   }
 
   def "should substitute placeholders"() {
-    given:
-    writeFile(project.file("reference.conf"), '''
+    buildFile << """
+      apply plugin: 'xebialabs.dependency'
+
+      repositories {
+        maven {
+          url "file://${repoDir.getAbsolutePath()}"
+        }
+      }
+      dependencyManagement {
+        importConf project.file("reference.conf")
+      }
+
+      assert testVersion == '4.0'
+    """
+    createFile("reference.conf") << '''
       someProperty: "4.0"
       dependencyManagement {
         versions {
-          junitVersion: ${someProperty}
+          testVersion = ${someProperty}
         }
       }
-    ''')
-    project.apply plugin: "xebialabs.dependency"
-
+    '''
     when:
-    project.dependencyManagement {
-      importConf project.file("reference.conf")
-    }
+    runTasksSuccessfully('build')
+    given:
 
     then:
-    project.extensions.getByType(ExtraPropertiesExtension).has("junitVersion")
-    project.extensions.getByType(ExtraPropertiesExtension).get("junitVersion") == "4.12"
+    noExceptionThrown()
   }
 
   def "should apply a dependencies file with a dependency local to the project"() {
-    given:
-    writeFile(project.file("dependencies.conf"), '''
-      dependencyManagement.dependencies: [
-        "junit:junit:$junitVersion"
-      ]
-    ''')
+    buildFile << """
+      apply plugin: 'xebialabs.dependency'
+      apply plugin: 'java'
 
-    project.apply plugin: "xebialabs.dependency"
-    project.apply plugin: "java"
-    project.dependencyManagement {
-      importConf project.file("dependencies.conf")
-    }
-    project.dependencies {
-      compile "junit:junit"
-    }
+      repositories {
+        maven {
+          url "file://${repoDir.absolutePath}"
+        }
+      }
+      dependencyManagement {
+        importConf project.file("dependencies.conf")
+      }
 
+      dependencies {
+        compile 'commons-lang:commons-lang'
+      }
+      task writeDeps(type:Copy) {
+        doFirst {
+          file("$projectDir/artifacts").mkdirs()
+        }
+        from configurations.compile
+        into "$projectDir/artifacts"
+      }
+    """
+    createFile("dependencies.conf") << '''
+      dependencyManagement {
+        dependencies: [ "commons-lang:commons-lang:2.6" ]
+      }
+    '''
     when:
-    def files = project.configurations.compile.resolve()
+    runTasksSuccessfully('writeDeps')
 
     then:
+    noExceptionThrown()
+    def files = new File(projectDir, 'artifacts').listFiles()
     files.size() >= 1
-    files.collect { it.name }.contains('junit-4.12.jar')
-  }
-
-  def "should override version from applied 'gradle/dependencies.conf' with project property"() {
-    given:
-    project.ext.setProperty('dependencyManagement.versions.junitVersion', '4.11')
-    writeFile(project.file("dependencies.conf"), '''
-      dependencyManagement.dependencies: [
-        "junit:junit:$junitVersion"
-      ]
-    ''')
-
-    project.apply plugin: "xebialabs.dependency"
-    project.apply plugin: "java"
-    project.dependencyManagement {
-      importConf project.file("dependencies.conf")
-    }
-    project.dependencies {
-      compile "junit:junit"
-    }
-
-    when:
-    def files = project.configurations.compile.resolve()
-
-    then:
-    files.size() >= 1
-    files.collect { it.name }.contains('junit-4.11.jar')
+    files.collect { it.name }.contains('commons-lang-2.6.jar')
   }
 
   def "should apply a dependencies file with a dependency-set local to the project"() {
-    given:
-    writeFile(project.file("dependencies.conf"), '''
+    buildFile << """
+      apply plugin: 'xebialabs.dependency'
+      apply plugin: 'java'
+
+      repositories {
+        maven {
+          url "file://${repoDir.absolutePath}"
+        }
+      }
+      dependencyManagement {
+        importConf project.file("dependencies.conf")
+      }
+
+      dependencies {
+        compile 'ch.qos.logback:logback-core'
+      }
+      task writeDeps(type:Copy) {
+        doFirst {
+          file("$projectDir/artifacts").mkdirs()
+        }
+        from configurations.compile
+        into "$projectDir/artifacts"
+      }
+    """
+    createFile("dependencies.conf") << '''
       dependencyManagement.dependencies: [
         {
           group: "ch.qos.logback"
@@ -187,138 +250,210 @@ class XLDependencyPluginSpec extends Specification {
           artifacts: [ "logback-classic", "logback-core" ]
         }
       ]
-    ''')
-
-    project.apply plugin: "xebialabs.dependency"
-    project.apply plugin: "java"
-    project.dependencyManagement {
-      importConf project.file("dependencies.conf")
-    }
-    project.dependencies {
-      compile "ch.qos.logback:logback-core"
-    }
+    '''
 
     when:
-    def files = project.configurations.compile.resolve()
+    runTasksSuccessfully('writeDeps')
 
     then:
-    files.size() >= 1
-    files.collect { it.name }.contains('logback-core-1.1.3.jar')
+    noExceptionThrown()
+    def fileNames = new File(projectDir, 'artifacts').listFiles().collect({ it.name }) as Set
+    fileNames.size() >= 1
+    fileNames.contains('logback-core-1.1.3.jar')
+  }
+
+  def "should override versions with project properties"() {
+    given:
+    createFile("dependencies.conf", directory('gradle')) << '''
+      dependencyManagement {
+        versions {
+          junitVersion: "4.12"
+        }
+        dependencies: [ "junit:junit:$junitVersion" ]
+      }
+    '''
+    buildFile << """
+      apply plugin: 'xebialabs.dependency'
+      apply plugin: 'java'
+
+      repositories {
+        maven {
+          url "file://${repoDir.absolutePath}"
+        }
+      }
+      dependencyManagement {
+        importConf project.file("reference.conf")
+      }
+
+      dependencies {
+        compile 'commons-lang:commons-lang'
+        compile 'junit:junit'
+      }
+      task writeDeps(type:Copy) {
+        doFirst {
+          file("$projectDir/artifacts").mkdirs()
+        }
+        from configurations.compile
+        into "$projectDir/artifacts"
+      }
+    """
+    createFile("reference.conf") << '''
+      dependencyManagement {
+        versions {
+          commonsLangVersion: "2.6"
+        }
+        dependencies: [ "commons-lang:commons-lang:$commonsLangVersion" ]
+      }
+    '''
+    when:
+    runTasksSuccessfully('writeDeps', '-PdependencyManagement.versions.junitVersion=4.11', '-PdependencyManagement.versions.commonsLangVersion=2.5')
+
+    then:
+    noExceptionThrown()
+    def fileNames = new File(projectDir, 'artifacts').listFiles().collect({ it.name }) as Set
+    fileNames.size() >= 2
+    fileNames.contains('commons-lang-2.5.jar')
+    fileNames.contains('junit-4.11.jar')
   }
 
   def "should resolve a zip dependency"() {
     given:
-    writeFile(project.file("dependencies.conf"), '''
+    createFile("dependencies.conf", directory('gradle')) << '''
       dependencyManagement {
-        dependencies: [ "test:dependencies:1.0@zip" ]
+        dependencies: [ "test:zip-dependency:1.0@zip" ]
       }
-    ''')
-    writeFile(new File(artifactDir, "dependencies-1.0.zip"), '');
+    '''
+    buildFile << """
+      apply plugin: 'xebialabs.dependency'
+      apply plugin: 'java'
 
+      repositories {
+        maven {
+          url "file://${repoDir.absolutePath}"
+        }
+      }
 
-    project.apply plugin: "xebialabs.dependency"
-    project.apply plugin: "java"
-    project.dependencyManagement {
-      importConf project.file("dependencies.conf")
-    }
-    project.dependencies {
-      compile 'test:dependencies@zip'
-    }
-
+      dependencies {
+        compile 'test:zip-dependency@zip'
+      }
+      task writeDeps(type:Copy) {
+        doFirst {
+          file("$projectDir/artifacts").mkdirs()
+        }
+        from configurations.compile
+        into "$projectDir/artifacts"
+      }
+    """
     when:
-    def files = project.configurations.compile.resolve()
+    runTasksSuccessfully('writeDeps')
 
     then:
-    files.size() >= 1
-    files.collect { it.name }.contains('dependencies-1.0.zip')
+    noExceptionThrown()
+    def fileNames = new File(projectDir, 'artifacts').listFiles().collect({ it.name }) as Set
+    fileNames.size() == 1
+    fileNames.contains('zip-dependency-1.0.zip')
   }
 
-  def "should resolve dependencies artifact"() {
-    given:
-    writeFile(new File(artifactDir, "dependencies-1.0-depmgmt.conf"), '''
-      dependencyManagement.dependencies: [
-        "junit:junit:$junitVersion"
-      ]
-    ''')
-    project.apply plugin: "xebialabs.dependency"
-    project.apply plugin: "java"
-    project.dependencyManagement {
-      importConf "test:dependencies:1.0:depmgmt"
-    }
-
-    project.dependencies {
-      compile "junit:junit"
-    }
-
-    when:
-    def files = project.configurations.compile.resolve()
-
-    then:
-    files.size() >= 1
-    files.collect { it.name }.contains('junit-4.12.jar')
-  }
-
+  // TODO: the version does not get applied in a rewrite
   def "should rewrite dependencies"() {
     given:
-    writeFile(project.file("dependencies.conf"), '''
-      dependencyManagement.rewrites {
-        "foo:bar": "ch.qos.logback:logback-core"
+    createFile("dependencies.conf", directory('gradle')) << '''
+      dependencyManagement {
+        dependencies: [ "junit:junit:$junitVersion" ]
+        rewrites {
+          "foo:bar": "junit:junit"
+        }
       }
-    ''')
+    '''
+    buildFile << """
+      apply plugin: 'xebialabs.dependency'
+      apply plugin: 'java'
 
-    project.apply plugin: "xebialabs.dependency"
-    project.apply plugin: "java"
+      repositories {
+        maven {
+          url "file://${repoDir.absolutePath}"
+        }
+      }
 
-    project.dependencyManagement {
-      importConf project.file("dependencies.conf")
-    }
-
-    project.dependencies {
-      compile "foo:bar:1.1.3"
-    }
-
+      dependencies {
+        compile 'foo:bar:4.12'
+      }
+      task writeDeps(type:Copy) {
+        doFirst {
+          file("$projectDir/artifacts").mkdirs()
+        }
+        from configurations.compile
+        into "$projectDir/artifacts"
+      }
+    """
     when:
-    def files = project.configurations.compile.resolve()
+    runTasksSuccessfully('writeDeps')
 
     then:
-    files.size() >= 1
-    files.collect { it.name }.contains('logback-core-1.1.3.jar')
+    noExceptionThrown()
+    def fileNames = new File(projectDir, 'artifacts').listFiles().collect({ it.name }) as Set
+    fileNames.size() >= 1
+    fileNames.contains('junit-4.12.jar')
   }
 
   def "should blacklist dependencies"() {
     given:
-    writeFile(project.file("dependencies.conf"), '''
-      dependencyManagement.dependencies: [
-        "junit:junit:$junitVersion"
-      ]
-      dependencyManagement.blacklist: [
-        "org.hamcrest"
-      ]
-    ''')
+    settingsFile << "include 'sub'"
+    createFile("dependencies.conf", directory('gradle')) << '''
+      dependencyManagement {
+        dependencies: [
+          "junit:junit:$junitVersion"
+          "com.netflix.nebula:nebula-test:3.1.0"
+        ]
+        blacklist: [ "org.hamcrest:hamcrest-core", "commons-lang:commons-lang" ]
+      }
+    '''
+    buildFile << '''
+      apply plugin: 'xebialabs.dependency'
 
-    project.apply plugin: "xebialabs.dependency"
-    project.apply plugin: "java"
+      allprojects.size() == 2
+      allprojects { p ->
+        apply plugin: 'java'
 
-    project.dependencyManagement {
-      importConf project.file("dependencies.conf")
-    }
+        repositories {
+          maven {
+            url "file://@repoDir@"
+          }
+        }
 
-    project.dependencies {
-      compile "junit:junit"
-    }
-
+        task writeDeps(type:Copy) {
+          def target = p.projectDir
+          println "Copying to ${target}/artifacts"
+          doFirst {
+            file("$target/artifacts").mkdirs()
+          }
+          from configurations.compile
+          into "$target/artifacts"
+        }
+      }
+      dependencies {
+        compile 'junit:junit'
+      }
+      subprojects {
+        dependencies {
+          compile 'com.netflix.nebula:nebula-test'
+        }
+      }
+    '''.replaceAll('@repoDir@', repoDir.absolutePath)
     when:
-    def files = project.configurations.compile.resolve()
+    def result = runTasksSuccessfully(':writeDeps', ':sub:writeDeps')
 
     then:
-    files.size() == 1
-    files.collect { it.name }.contains('junit-4.12.jar')
-    !files.collect { it.name }.contains('hamcrest-core-1.1.3.jar')
-  }
+    noExceptionThrown()
 
-  private def writeFile(File file, String content) {
-    file.withWriter { BufferedWriter writer ->
-      writer.write(content)
-    }
+    def fileNames = new File(projectDir, 'artifacts').listFiles().collect({ it.name }) as Set
+    fileNames.size() == 1
+    !fileNames.contains('hamcrest-core-1.1.3.jar')
+    fileNames.contains('junit-4.12.jar')
+
+    def subfileNames = new File(projectDir, 'sub/artifacts').listFiles().collect({ it.name }) as Set
+    subfileNames.size() == 1
+    subfileNames.contains('nebula-test-3.1.0.jar')
+    !subfileNames.contains('commons-lang-2.6.jar')
   }
 }
