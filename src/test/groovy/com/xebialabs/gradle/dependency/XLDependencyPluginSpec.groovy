@@ -5,8 +5,6 @@ import nebula.test.dependencies.DependencyGraph
 import nebula.test.dependencies.GradleDependencyGenerator
 
 class XLDependencyPluginSpec extends IntegrationSpec {
-
-  File artifactDir
   File repoDir
 
   def setup() {
@@ -30,11 +28,13 @@ class XLDependencyPluginSpec extends IntegrationSpec {
                                      'junit:junit:4.12 -> org.hamcrest:hamcrest-core:1.1.3'])
     def generator = new GradleDependencyGenerator(graph)
     repoDir = generator.generateTestMavenRepo()
+
+    // sadly the generator does not create zips
     createFile('zip-dependency-1.0.zip', directory('test/zip-dependency/1.0', repoDir))
 
-    repoDir.eachFileRecurse {
-      println it
-    }
+//    repoDir.eachFileRecurse {
+//      println it
+//    }
   }
 
   def configureRepositories(project) {
