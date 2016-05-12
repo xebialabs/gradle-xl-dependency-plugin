@@ -22,6 +22,7 @@ class DependencyManagementProjectConfigurer {
       }
     }
 
+    // Work around: https://issues.gradle.org/browse/GRADLE-3120
     project.afterEvaluate {
       project.plugins.withType(MavenPlugin) { plugin ->
         def installer = project.tasks.findByName("install")?.repositories?.mavenInstaller
