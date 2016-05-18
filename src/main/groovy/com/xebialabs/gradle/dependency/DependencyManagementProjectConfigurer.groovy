@@ -22,44 +22,6 @@ class DependencyManagementProjectConfigurer {
       }
     }
 
-    // Work around: https://issues.gradle.org/browse/GRADLE-3120
-    project.afterEvaluate {
-      project.plugins.withType(MavenPlugin) { plugin ->
-        def installer = project.tasks.findByName("install")?.repositories?.mavenInstaller
-        def deployer = project.tasks.getByName("uploadArchives").repositories.mavenDeployer
-
-        [installer, deployer].findAll { it != null }*.pom*.whenConfigured { pom ->
-          def dependencyMap = [:]
-          if (project.configurations.findByName("runtime")) {
-            dependencyMap['runtime'] = project.configurations.runtime.incoming.resolutionResult.allDependencies
-          }
-          if (project.configurations.findByName("testRuntime")) {
-            dependencyMap['test'] = project.configurations.testRuntime.incoming.resolutionResult.allDependencies - dependencyMap['runtime']
-          }
-          pom.dependencies.each { dep ->
-            def group = dep.groupId
-            def name = dep.artifactId
-            def scope = dep.scope
-
-            if (['provided', 'compile'].contains(scope)) {
-              scope = 'runtime'
-            }
-
-            ResolvedDependencyResult resolved = dependencyMap[scope].find { r ->
-              (r.requested instanceof ModuleComponentSelector) &&
-                (r.requested.group == group) &&
-                (r.requested.module == name)
-            }
-
-            if (!resolved) {
-              return  // continue loop if a dependency is not found in dependencyMap
-            }
-
-            dep.version = resolved?.selected?.moduleVersion?.version
-          }
-        }
-      }
-    }
   }
 
   private static Action<? super DependencyResolveDetails> rewrite(Project project, DependencyManagementContainer container) {
