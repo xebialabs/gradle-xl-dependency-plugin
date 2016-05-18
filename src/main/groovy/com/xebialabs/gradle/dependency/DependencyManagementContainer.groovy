@@ -3,6 +3,7 @@ package com.xebialabs.gradle.dependency
 import com.xebialabs.gradle.dependency.domain.GroupArtifact
 import com.xebialabs.gradle.dependency.supplier.DependencyManagementSupplier
 import groovy.text.SimpleTemplateEngine
+import org.gradle.api.Action
 import org.gradle.api.Project
 import org.gradle.api.artifacts.Configuration
 import org.gradle.api.logging.Logger
@@ -77,23 +78,7 @@ class DependencyManagementContainer {
 
   def blackList(String group, String artifact) {
     def ga = new GroupArtifact(resolve(group), resolve(artifact))
-    projects.each { p ->
-      // at this point the configurations of sub projects are empty, so need to afterEvaluate
-      p.afterEvaluate {
-        logger.debug("blacklisting artifacts in cfgs=$p.configurations")
-
-        p.configurations.each { Configuration config ->
-          // another problem is that the configuration may be resolved at this point so we cannot operate on it
-          if (config.getState() == Configuration.State.UNRESOLVED) {
-            logger.debug("$config excluding ${ga.toMap()}")
-            config.exclude ga.toMap()
-          } else {
-            // TODO: I'd like to warn but that spams the build incredibly
-            logger.info("$config already resolved. Unable to exclude $group:$artifact")
-          }
-        }
-      }
-    }
+    blackList.add(ga)
   }
 
   def rewrite(String fromGroup, String fromArtifact, String toGroup, String toArtifact) {

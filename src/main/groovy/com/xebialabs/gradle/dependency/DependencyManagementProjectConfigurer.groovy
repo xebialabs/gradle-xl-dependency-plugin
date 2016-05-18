@@ -13,15 +13,23 @@ import org.gradle.api.plugins.MavenPlugin
 class DependencyManagementProjectConfigurer {
 
   static def configureProject(Project project, DependencyManagementContainer container) {
-    project.configurations.all { Configuration config ->
+    // Contract for all is that it executes the closure for all currently assigned objects, and any objects added later.
+    project.getConfigurations().all { Configuration config ->
       if (config.name != 'zinc') { // The Scala compiler 'zinc' configuration should not be managed by us
         config.resolutionStrategy { ResolutionStrategy rs ->
           rs.eachDependency(rewrite(project, container))
           rs.eachDependency(forceVersion(project, container))
         }
+        configureExcludes(project, config, container)
       }
     }
+  }
 
+  static def configureExcludes(Project project, Configuration config, DependencyManagementContainer container) {
+    container.blackList.forEach { ga ->
+      project.logger.info("Excluding ${ga.toMap()} from configuration ${config.getName()}")
+      config.exclude ga.toMap()
+    }
   }
 
   private static Action<? super DependencyResolveDetails> rewrite(Project project, DependencyManagementContainer container) {
@@ -41,8 +49,7 @@ class DependencyManagementProjectConfigurer {
     }
   }
 
-  private
-  static Action<DependencyResolveDetails> forceVersion(Project project, DependencyManagementContainer container) {
+  private static Action<DependencyResolveDetails> forceVersion(Project project, DependencyManagementContainer container) {
     return new Action<DependencyResolveDetails>() {
       @Override
       void execute(DependencyResolveDetails details) {
