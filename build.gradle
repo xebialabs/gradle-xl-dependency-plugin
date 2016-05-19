@@ -23,6 +23,7 @@ idea {
 
 release {
   grgit = org.ajoberstar.grgit.Grgit.open(project.projectDir)
+  defaultVersionStrategy = org.ajoberstar.gradle.git.release.opinion.Strategies.SNAPSHOT 
   tagStrategy {
     toTagString = { vs -> "${project.name}-$vs" }
     parseTag = { org.ajoberstar.grgit.Tag tag ->
