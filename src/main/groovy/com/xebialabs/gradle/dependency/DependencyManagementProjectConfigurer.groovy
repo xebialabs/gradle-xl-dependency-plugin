@@ -1,6 +1,7 @@
 package com.xebialabs.gradle.dependency
 
 import com.xebialabs.gradle.dependency.domain.GroupArtifact
+import com.xebialabs.gradle.dependency.domain.GroupArtifactVersion
 import org.gradle.api.Action
 import org.gradle.api.Project
 import org.gradle.api.artifacts.Configuration
@@ -42,8 +43,22 @@ class DependencyManagementProjectConfigurer {
         def fromGa = new GroupArtifact(details.requested.group, details.requested.name)
         GroupArtifact groupArtifact = rewrites[fromGa]
         if (groupArtifact) {
-          project.logger.info("Rewriting $fromGa -> $groupArtifact")
-          details.useTarget(groupArtifact.toMap(details.requested))
+          if (groupArtifact instanceof GroupArtifactVersion) {
+            project.logger.info("Rewriting $fromGa -> $groupArtifact")
+            details.useTarget(groupArtifact.toMap(details.requested))
+          } else {
+            def requestedVersion = container.getManagedVersion(details.requested.group, details.requested.name) ?: details.requested.version
+            def rewriteVersion = container.getManagedVersion(groupArtifact.group, groupArtifact.artifact)
+            if (rewriteVersion) {
+              def gav = groupArtifact.withVersion(rewriteVersion)
+              project.logger.info("Rewriting $fromGa -> $gav")
+              details.useTarget(gav.toMap(details.requested))
+            } else {
+              def gav = groupArtifact.withVersion(requestedVersion)
+              project.logger.info("Rewriting $fromGa -> $gav")
+              details.useTarget(gav.toMap(details.requested))
+            }
+          }
         }
       }
     }

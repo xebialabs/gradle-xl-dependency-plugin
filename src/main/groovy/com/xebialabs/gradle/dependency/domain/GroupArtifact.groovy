@@ -13,6 +13,10 @@ class GroupArtifact {
     this.artifact = artifact
   }
 
+  def withVersion(String version) {
+    return new GroupArtifactVersion(group, artifact, version)
+  }
+
   Map toMap(ModuleVersionSelector selector) {
     if (artifact) {
       return [group: group, name: artifact, version: selector.version]

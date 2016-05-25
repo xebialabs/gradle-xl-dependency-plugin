@@ -1,6 +1,7 @@
 package com.xebialabs.gradle.dependency
 
 import com.xebialabs.gradle.dependency.domain.GroupArtifact
+import com.xebialabs.gradle.dependency.domain.GroupArtifactVersion
 import com.xebialabs.gradle.dependency.supplier.DependencyManagementSupplier
 import groovy.text.SimpleTemplateEngine
 import org.gradle.api.Action
@@ -81,7 +82,12 @@ class DependencyManagementContainer {
     blackList.add(ga)
   }
 
-  def rewrite(String fromGroup, String fromArtifact, String toGroup, String toArtifact) {
-    this.rewrites.put(new GroupArtifact(fromGroup, fromArtifact), new GroupArtifact(toGroup, toArtifact))
+  def rewrite(String fromGroup, String fromArtifact, String toGroup, String toArtifact, String toVersion) {
+    def fromGa = new GroupArtifact(fromGroup, fromArtifact)
+    def toGa = new GroupArtifact(toGroup, toArtifact)
+    if (toVersion) {
+      toGa = new GroupArtifactVersion(toGroup, toArtifact, toVersion)
+    }
+    this.rewrites.put(fromGa, toGa)
   }
 }
