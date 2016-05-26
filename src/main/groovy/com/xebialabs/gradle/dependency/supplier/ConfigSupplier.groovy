@@ -66,7 +66,7 @@ abstract class ConfigSupplier implements DependencyManagementSupplier {
 
 
   private def parseDependencies(ConfigList list, DependencyManagementContainer container) {
-    list.forEach { ConfigValue v ->
+    list.each { ConfigValue v ->
       if (v.valueType() == ConfigValueType.STRING) {
         def gav = (v.unwrapped() as String).split('[:@]')
         container.addManagedVersion(gav[0], gav[1], gav[2])
@@ -74,7 +74,7 @@ abstract class ConfigSupplier implements DependencyManagementSupplier {
         ConfigObject o = v as ConfigObject
         String group = o.get("group").unwrapped()
         String version = o.get("version").unwrapped()
-        (o.get("artifacts") as ConfigList).forEach { ConfigValue entry ->
+        (o.get("artifacts") as ConfigList).each { ConfigValue entry ->
           container.addManagedVersion(group, entry.unwrapped() as String, version)
         }
 
@@ -83,7 +83,7 @@ abstract class ConfigSupplier implements DependencyManagementSupplier {
   }
 
   private def parseBlackList(ConfigList list, DependencyManagementContainer container) {
-    list.forEach { ConfigValue cv ->
+    list.each { ConfigValue cv ->
       def ga = (cv.unwrapped() as String).split(":")
       if (ga.length == 1) {
         container.blackList(ga[0], null)

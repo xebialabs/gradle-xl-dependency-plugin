@@ -27,7 +27,7 @@ class DependencyManagementProjectConfigurer {
   }
 
   static def configureExcludes(Project project, Configuration config, DependencyManagementContainer container) {
-    container.blackList.forEach { ga ->
+    container.blackList.each { ga ->
       project.logger.info("Excluding ${ga.toMap()} from configuration ${config.getName()}")
       config.exclude ga.toMap()
     }
