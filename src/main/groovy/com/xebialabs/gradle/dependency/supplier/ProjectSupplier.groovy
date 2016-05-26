@@ -1,9 +1,10 @@
 package com.xebialabs.gradle.dependency.supplier
 
-import com.xebialabs.gradle.dependency.DependencyManagementContainer
+import com.typesafe.config.Config
+import com.typesafe.config.ConfigFactory
 import org.gradle.api.Project
 
-class ProjectSupplier implements DependencyManagementSupplier {
+class ProjectSupplier extends ConfigSupplier {
 
   public static final String VERSION_KEY_PREFIX = "dependencyManagement.versions."
   private Project project
@@ -13,27 +14,12 @@ class ProjectSupplier implements DependencyManagementSupplier {
   }
 
   @Override
-  def collectDependencies(DependencyManagementContainer container) {
-    // Do nothing
-  }
-
-  @Override
-  def collectVersions(DependencyManagementContainer container) {
-    def versionOverrides = project.properties.findAll { k, v -> k.startsWith(VERSION_KEY_PREFIX) }
-    if (versionOverrides) {
-      versionOverrides.each { k, v ->
-        container.registerVersionKey(k[VERSION_KEY_PREFIX.length()..-1], v as String)
-      }
+  Config getConfig() {
+    def versions = project.properties.findAll { k, v -> k.startsWith(VERSION_KEY_PREFIX) }
+    if (versions) {
+      return ConfigFactory.parseMap(versions)
+    } else {
+      return ConfigFactory.empty()
     }
-  }
-
-  @Override
-  def collectExclusions(DependencyManagementContainer container) {
-    // Do nothing
-  }
-
-  @Override
-  def collectRewrites(DependencyManagementContainer container) {
-    // Do nothing
   }
 }
