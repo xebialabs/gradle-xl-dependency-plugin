@@ -354,8 +354,7 @@ class XLDependencyPluginSpec extends IntegrationSpec {
     fileNames.contains('zip-dependency-1.0.zip')
   }
 
-  // TODO: the version does not get applied in a rewrite
-  def "should rewrite dependencies"() {
+  def "should rewrite dependencies using the managed version"() {
     given:
     createFile("dependencies.conf", directory('gradle')) << '''
       dependencyManagement {
@@ -376,7 +375,48 @@ class XLDependencyPluginSpec extends IntegrationSpec {
       }
 
       dependencies {
-        compile 'foo:bar:4.12'
+        compile 'foo:bar'
+      }
+      task writeDeps(type:Copy) {
+        doFirst {
+          file("$projectDir/artifacts").mkdirs()
+        }
+        from configurations.compile
+        into "$projectDir/artifacts"
+      }
+    """
+    when:
+    runTasksSuccessfully('writeDeps')
+
+    then:
+    noExceptionThrown()
+    def fileNames = new File(projectDir, 'artifacts').listFiles().collect({ it.name }) as Set
+    fileNames.size() >= 1
+    fileNames.contains('junit-4.12.jar')
+  }
+
+  def "should rewrite to the version of the original artifact if no managed version is found for the rewrite"() {
+    given:
+    createFile("dependencies.conf", directory('gradle')) << '''
+      dependencyManagement {
+        dependencies: [ "foo:bar:4.12" ]
+        rewrites {
+          "foo:bar": "junit:junit"
+        }
+      }
+    '''
+    buildFile << """
+      apply plugin: 'xebialabs.dependency'
+      apply plugin: 'java'
+
+      repositories {
+        maven {
+          url "file://${repoDir.absolutePath}"
+        }
+      }
+
+      dependencies {
+        compile 'foo:bar'
       }
       task writeDeps(type:Copy) {
         doFirst {
