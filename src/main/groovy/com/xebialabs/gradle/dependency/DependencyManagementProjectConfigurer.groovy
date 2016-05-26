@@ -43,22 +43,15 @@ class DependencyManagementProjectConfigurer {
         def fromGa = new GroupArtifact(details.requested.group, details.requested.name)
         GroupArtifact groupArtifact = rewrites[fromGa]
         if (groupArtifact) {
-          if (groupArtifact instanceof GroupArtifactVersion) {
-            project.logger.info("Rewriting $fromGa -> $groupArtifact")
-            details.useTarget(groupArtifact.toMap(details.requested))
+          def requestedVersion = container.getManagedVersion(details.requested.group, details.requested.name) ?: details.requested.version
+          def rewriteVersion = container.getManagedVersion(groupArtifact.group, groupArtifact.artifact)
+          if (rewriteVersion) {
+            groupArtifact = groupArtifact.withVersion(rewriteVersion)
           } else {
-            def requestedVersion = container.getManagedVersion(details.requested.group, details.requested.name) ?: details.requested.version
-            def rewriteVersion = container.getManagedVersion(groupArtifact.group, groupArtifact.artifact)
-            if (rewriteVersion) {
-              def gav = groupArtifact.withVersion(rewriteVersion)
-              project.logger.info("Rewriting $fromGa -> $gav")
-              details.useTarget(gav.toMap(details.requested))
-            } else {
-              def gav = groupArtifact.withVersion(requestedVersion)
-              project.logger.info("Rewriting $fromGa -> $gav")
-              details.useTarget(gav.toMap(details.requested))
-            }
+            groupArtifact = groupArtifact.withVersion(requestedVersion)
           }
+          project.logger.info("Rewriting $fromGa -> $groupArtifact")
+          details.useTarget(groupArtifact.toMap(details.requested))
         }
       }
     }

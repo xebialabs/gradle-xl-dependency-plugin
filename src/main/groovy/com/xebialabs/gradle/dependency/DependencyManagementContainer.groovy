@@ -82,12 +82,9 @@ class DependencyManagementContainer {
     blackList.add(ga)
   }
 
-  def rewrite(String fromGroup, String fromArtifact, String toGroup, String toArtifact, String toVersion) {
+  def rewrite(String fromGroup, String fromArtifact, String toGroup, String toArtifact) {
     def fromGa = new GroupArtifact(fromGroup, fromArtifact)
     def toGa = new GroupArtifact(toGroup, toArtifact)
-    if (toVersion) {
-      toGa = new GroupArtifactVersion(toGroup, toArtifact, toVersion)
-    }
     this.rewrites.put(fromGa, toGa)
   }
 }

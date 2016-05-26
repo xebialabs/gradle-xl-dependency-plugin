@@ -98,8 +98,7 @@ abstract class ConfigSupplier implements DependencyManagementSupplier {
       String key = e.key.startsWith("\"") ? e.key[1..-2] : e.key
       def ga = key.split(":")
       def toGa = (e.value.unwrapped() as String).split(":")
-      def toVersion = toGa.length > 2 ? toGa[2] : null
-      container.rewrite(ga[0], ga[1], toGa[0], toGa[1], toVersion)
+      container.rewrite(ga[0], ga[1], toGa[0], toGa[1])
     }
   }
 }

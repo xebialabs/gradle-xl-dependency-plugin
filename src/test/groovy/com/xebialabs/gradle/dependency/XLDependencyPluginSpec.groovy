@@ -395,13 +395,13 @@ class XLDependencyPluginSpec extends IntegrationSpec {
     fileNames.contains('junit-4.12.jar')
   }
 
-  def "should rewrite dependencies including a rewritten version"() {
+  def "should rewrite to the version of the original artifact if no managed version is found for the rewrite"() {
     given:
     createFile("dependencies.conf", directory('gradle')) << '''
       dependencyManagement {
-        dependencies: [ "junit:junit:4.11" ]
+        dependencies: [ "foo:bar:4.12" ]
         rewrites {
-          "foo:bar": "junit:junit:4.12"
+          "foo:bar": "junit:junit"
         }
       }
     '''
