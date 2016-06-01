@@ -496,4 +496,57 @@ class XLDependencyPluginSpec extends IntegrationSpec {
     subfileNames.contains('nebula-test-3.1.0.jar')
     !subfileNames.contains('commons-lang-2.6.jar')
   }
+
+  // Usecase is for example the $scalaVersion
+  def "should resolve managed versions inside group/artifact of dependency"() {
+    given:
+    createFile("dependencies.conf", directory('gradle')) << '''
+      dependencyManagement {
+        versions {
+          junitVersion: "4.12"
+        }
+        dependencies: [ "$foo:$foo:$junitVersion" ]
+      }
+    '''
+    buildFile << """
+      apply plugin: 'xebialabs.dependency'
+      apply plugin: 'java'
+
+      repositories {
+        maven {
+          url "file://${repoDir.absolutePath}"
+        }
+      }
+      dependencyManagement {
+        importConf project.file("reference.conf")
+      }
+
+      dependencies {
+        compile "junit:\$foo"
+      }
+      task writeDeps(type:Copy) {
+        doFirst {
+          file("$projectDir/artifacts").mkdirs()
+        }
+        from configurations.compile
+        into "$projectDir/artifacts"
+      }
+    """
+    createFile("reference.conf") << '''
+      dependencyManagement {
+        versions {
+          commonsLangVersion: "2.6"
+        }
+        dependencies: [ "commons-lang:commons-lang:$commonsLangVersion" ]
+      }
+    '''
+    when:
+    runTasksSuccessfully('writeDeps', '-PdependencyManagement.versions.junitVersion=4.11', '-PdependencyManagement.versions.foo=junit')
+
+    then:
+    noExceptionThrown()
+    def fileNames = new File(projectDir, 'artifacts').listFiles().collect({ it.name }) as Set
+    fileNames.size() >= 2
+    fileNames.contains('junit-4.11.jar')
+  }
 }

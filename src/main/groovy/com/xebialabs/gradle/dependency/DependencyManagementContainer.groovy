@@ -1,12 +1,9 @@
 package com.xebialabs.gradle.dependency
 
 import com.xebialabs.gradle.dependency.domain.GroupArtifact
-import com.xebialabs.gradle.dependency.domain.GroupArtifactVersion
 import com.xebialabs.gradle.dependency.supplier.DependencyManagementSupplier
 import groovy.text.SimpleTemplateEngine
-import org.gradle.api.Action
 import org.gradle.api.Project
-import org.gradle.api.artifacts.Configuration
 import org.gradle.api.logging.Logger
 import org.gradle.api.logging.Logging
 import org.gradle.api.plugins.ExtraPropertiesExtension
@@ -64,7 +61,7 @@ class DependencyManagementContainer {
   }
 
   String getManagedVersion(String group, String artifact) {
-    String ga = "$group:$artifact"
+    String ga = resolve("$group:$artifact")
     logger.debug("Trying to resolve version for $ga")
     if (managedVersions[ga]) {
       return managedVersions[ga]
