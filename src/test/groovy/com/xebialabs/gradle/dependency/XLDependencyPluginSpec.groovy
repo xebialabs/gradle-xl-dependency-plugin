@@ -47,15 +47,7 @@ class XLDependencyPluginSpec extends IntegrationSpec {
 
   def "should apply the version override file from the rootProject"() {
     given:
-    buildFile << """
-    apply plugin: 'xebialabs.dependency'
-
-    repositories {
-      maven {
-        url "file://${repoDir.getAbsolutePath()}"
-      }
-    }
-
+    baseBuildFile(['xebialabs.dependency']) << """
     assert junitVersion == '4.12'
     """
     when:
@@ -90,14 +82,7 @@ class XLDependencyPluginSpec extends IntegrationSpec {
 
   def "should apply a reference file from the currently built project"() {
     given:
-    buildFile << """
-      apply plugin: 'xebialabs.dependency'
-
-      repositories {
-        maven {
-          url "file://${repoDir.getAbsolutePath()}"
-        }
-      }
+    baseBuildFile(['xebialabs.dependency']) << """
       dependencyManagement {
         importConf project.file("reference.conf")
       }
@@ -119,14 +104,7 @@ class XLDependencyPluginSpec extends IntegrationSpec {
   }
 
   def "should take version from gradle/dependencies.conf over reference.conf"() {
-    buildFile << """
-      apply plugin: 'xebialabs.dependency'
-
-      repositories {
-        maven {
-          url "file://${repoDir.getAbsolutePath()}"
-        }
-      }
+    baseBuildFile(['xebialabs.dependency']) << """
       dependencyManagement {
         importConf project.file("reference.conf")
       }
@@ -147,14 +125,7 @@ class XLDependencyPluginSpec extends IntegrationSpec {
   }
 
   def "should substitute placeholders"() {
-    buildFile << """
-      apply plugin: 'xebialabs.dependency'
-
-      repositories {
-        maven {
-          url "file://${repoDir.getAbsolutePath()}"
-        }
-      }
+    baseBuildFile(['xebialabs.dependency']) << """
       dependencyManagement {
         importConf project.file("reference.conf")
       }
@@ -178,28 +149,13 @@ class XLDependencyPluginSpec extends IntegrationSpec {
   }
 
   def "should apply a dependencies file with a dependency local to the project"() {
-    buildFile << """
-      apply plugin: 'xebialabs.dependency'
-      apply plugin: 'java'
-
-      repositories {
-        maven {
-          url "file://${repoDir.absolutePath}"
-        }
-      }
+    baseBuildFile(['xebialabs.dependency', 'java']) << writeDepTask() << """
       dependencyManagement {
         importConf project.file("dependencies.conf")
       }
 
       dependencies {
         compile 'commons-lang:commons-lang'
-      }
-      task writeDeps(type:Copy) {
-        doFirst {
-          file("$projectDir/artifacts").mkdirs()
-        }
-        from configurations.compile
-        into "$projectDir/artifacts"
       }
     """
     createFile("dependencies.conf") << '''
@@ -218,28 +174,13 @@ class XLDependencyPluginSpec extends IntegrationSpec {
   }
 
   def "should apply a dependencies file with a dependency-set local to the project"() {
-    buildFile << """
-      apply plugin: 'xebialabs.dependency'
-      apply plugin: 'java'
-
-      repositories {
-        maven {
-          url "file://${repoDir.absolutePath}"
-        }
-      }
+    baseBuildFile(['xebialabs.dependency', 'java']) << writeDepTask() << """
       dependencyManagement {
         importConf project.file("dependencies.conf")
       }
 
       dependencies {
         compile 'ch.qos.logback:logback-core'
-      }
-      task writeDeps(type:Copy) {
-        doFirst {
-          file("$projectDir/artifacts").mkdirs()
-        }
-        from configurations.compile
-        into "$projectDir/artifacts"
       }
     """
     createFile("dependencies.conf") << '''
@@ -272,15 +213,7 @@ class XLDependencyPluginSpec extends IntegrationSpec {
         dependencies: [ "junit:junit:$junitVersion" ]
       }
     '''
-    buildFile << """
-      apply plugin: 'xebialabs.dependency'
-      apply plugin: 'java'
-
-      repositories {
-        maven {
-          url "file://${repoDir.absolutePath}"
-        }
-      }
+    baseBuildFile(['xebialabs.dependency', 'java']) << writeDepTask() << """
       dependencyManagement {
         importConf project.file("reference.conf")
       }
@@ -288,13 +221,6 @@ class XLDependencyPluginSpec extends IntegrationSpec {
       dependencies {
         compile 'commons-lang:commons-lang'
         compile 'junit:junit'
-      }
-      task writeDeps(type:Copy) {
-        doFirst {
-          file("$projectDir/artifacts").mkdirs()
-        }
-        from configurations.compile
-        into "$projectDir/artifacts"
       }
     """
     createFile("reference.conf") << '''
@@ -323,25 +249,9 @@ class XLDependencyPluginSpec extends IntegrationSpec {
         dependencies: [ "test:zip-dependency:1.0@zip" ]
       }
     '''
-    buildFile << """
-      apply plugin: 'xebialabs.dependency'
-      apply plugin: 'java'
-
-      repositories {
-        maven {
-          url "file://${repoDir.absolutePath}"
-        }
-      }
-
+    baseBuildFile(['xebialabs.dependency', 'java']) << writeDepTask() << """
       dependencies {
         compile 'test:zip-dependency@zip'
-      }
-      task writeDeps(type:Copy) {
-        doFirst {
-          file("$projectDir/artifacts").mkdirs()
-        }
-        from configurations.compile
-        into "$projectDir/artifacts"
       }
     """
     when:
@@ -364,25 +274,9 @@ class XLDependencyPluginSpec extends IntegrationSpec {
         }
       }
     '''
-    buildFile << """
-      apply plugin: 'xebialabs.dependency'
-      apply plugin: 'java'
-
-      repositories {
-        maven {
-          url "file://${repoDir.absolutePath}"
-        }
-      }
-
+    baseBuildFile(['xebialabs.dependency', 'java']) << writeDepTask() << """
       dependencies {
         compile 'foo:bar'
-      }
-      task writeDeps(type:Copy) {
-        doFirst {
-          file("$projectDir/artifacts").mkdirs()
-        }
-        from configurations.compile
-        into "$projectDir/artifacts"
       }
     """
     when:
@@ -405,25 +299,9 @@ class XLDependencyPluginSpec extends IntegrationSpec {
         }
       }
     '''
-    buildFile << """
-      apply plugin: 'xebialabs.dependency'
-      apply plugin: 'java'
-
-      repositories {
-        maven {
-          url "file://${repoDir.absolutePath}"
-        }
-      }
-
+    baseBuildFile(['xebialabs.dependency', 'java']) << writeDepTask() << """
       dependencies {
         compile 'foo:bar'
-      }
-      task writeDeps(type:Copy) {
-        doFirst {
-          file("$projectDir/artifacts").mkdirs()
-        }
-        from configurations.compile
-        into "$projectDir/artifacts"
       }
     """
     when:
@@ -508,28 +386,13 @@ class XLDependencyPluginSpec extends IntegrationSpec {
         dependencies: [ "$foo:$foo:$junitVersion" ]
       }
     '''
-    buildFile << """
-      apply plugin: 'xebialabs.dependency'
-      apply plugin: 'java'
-
-      repositories {
-        maven {
-          url "file://${repoDir.absolutePath}"
-        }
-      }
+    baseBuildFile(['xebialabs.dependency', 'java']) << writeDepTask() << """
       dependencyManagement {
         importConf project.file("reference.conf")
       }
 
       dependencies {
         compile "junit:\$foo"
-      }
-      task writeDeps(type:Copy) {
-        doFirst {
-          file("$projectDir/artifacts").mkdirs()
-        }
-        from configurations.compile
-        into "$projectDir/artifacts"
       }
     """
     createFile("reference.conf") << '''
@@ -548,5 +411,33 @@ class XLDependencyPluginSpec extends IntegrationSpec {
     def fileNames = new File(projectDir, 'artifacts').listFiles().collect({ it.name }) as Set
     fileNames.size() >= 2
     fileNames.contains('junit-4.11.jar')
+  }
+
+  def baseBuildFile(List<String> plugins) {
+    plugins.each {
+      buildFile << """
+        apply plugin: '$it'
+      """
+    }
+    buildFile << """
+      repositories {
+        maven {
+          url "file://${repoDir.absolutePath}"
+        }
+      }
+    """
+    buildFile
+  }
+
+  def writeDepTask() {
+"""
+      task writeDeps(type:Copy) {
+        doFirst {
+          file("$projectDir/artifacts").mkdirs()
+        }
+        from configurations.compile
+        into "$projectDir/artifacts"
+      }
+"""
   }
 }
