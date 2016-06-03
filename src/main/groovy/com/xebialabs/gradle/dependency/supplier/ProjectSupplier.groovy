@@ -4,7 +4,7 @@ import com.typesafe.config.Config
 import com.typesafe.config.ConfigFactory
 import org.gradle.api.Project
 
-class ProjectSupplier extends ConfigSupplier {
+class ProjectSupplier implements ConfigSupplier {
 
   public static final String VERSION_KEY_PREFIX = "dependencyManagement.versions."
   private Project project

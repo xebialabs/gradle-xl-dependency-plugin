@@ -1,7 +1,9 @@
 package com.xebialabs.gradle.dependency
 
 import com.xebialabs.gradle.dependency.domain.GroupArtifact
+import com.xebialabs.gradle.dependency.supplier.ConfigSupplier
 import com.xebialabs.gradle.dependency.supplier.DependencyManagementSupplier
+import com.xebialabs.gradle.dependency.supplier.MasterDependencyConfigSupplier
 import groovy.text.SimpleTemplateEngine
 import org.gradle.api.Project
 import org.gradle.api.logging.Logger
@@ -12,8 +14,9 @@ class DependencyManagementContainer {
   private static final Logger logger = Logging.getLogger(DependencyManagementContainer.class)
 
   private SimpleTemplateEngine engine = new SimpleTemplateEngine()
-  private List<DependencyManagementSupplier> suppliers = []
+  private MasterDependencyConfigSupplier supplier = new MasterDependencyConfigSupplier()
   private List<Project> projects = []
+  private boolean resolved = false
 
   Map versions = [:].withDefault { "" }
   Map managedVersions = [:]
@@ -25,23 +28,19 @@ class DependencyManagementContainer {
   }
 
   def resolveIfNecessary() {
-//        // First collect all versions
-//        suppliers.each {
-//            it.collectVersions(this)
-//        }
-//        // Then all keys
-//        suppliers.each {
-//            it.collectDependencies(this)
-//        }
-//        suppliers.clear()
+    if (!resolved) {
+      this.supplier.collectDependencies(this)
+      this.supplier.collectRewrites(this)
+      resolved = true
+    }
   }
 
-  def addSupplier(DependencyManagementSupplier supplier) {
-//        suppliers.add(supplier)
-    supplier.collectVersions(this)
-    supplier.collectDependencies(this)
-    supplier.collectExclusions(this)
-    supplier.collectRewrites(this)
+  def addSupplier(ConfigSupplier supplier) {
+    this.supplier.addConfig(supplier)
+    this.supplier.collectVersions(this)
+    // WE want to collect the exclusions late, however that somehow does not work.
+    this.supplier.collectExclusions(this)
+    resolved = false
   }
 
   def registerVersionKey(String key, String version) {
@@ -57,7 +56,9 @@ class DependencyManagementContainer {
 
   def addManagedVersion(String group, String artifact, String version) {
     def ga = resolve("$group:$artifact")
-    managedVersions[ga] = resolve(version)
+    def resolvedVersion = resolve(version)
+    logger.info("Adding managed version $ga -> $resolvedVersion")
+    managedVersions[ga] = resolvedVersion
   }
 
   String getManagedVersion(String group, String artifact) {
@@ -65,6 +66,8 @@ class DependencyManagementContainer {
     logger.debug("Trying to resolve version for $ga")
     if (managedVersions[ga]) {
       return managedVersions[ga]
+    } else {
+      logger.debug("Unable to find $ga in $managedVersions")
     }
 
     return null

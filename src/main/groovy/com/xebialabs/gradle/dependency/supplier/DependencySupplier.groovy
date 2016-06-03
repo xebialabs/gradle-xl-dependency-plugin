@@ -4,7 +4,7 @@ import com.typesafe.config.Config
 import com.typesafe.config.ConfigFactory
 import org.gradle.api.Project
 
-class DependencySupplier extends ConfigSupplier {
+class DependencySupplier implements ConfigSupplier {
 
   private String dependency
   private Config config

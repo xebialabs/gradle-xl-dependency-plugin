@@ -3,7 +3,7 @@ package com.xebialabs.gradle.dependency.supplier
 import com.typesafe.config.Config
 import com.typesafe.config.ConfigFactory
 
-class FileSupplier extends ConfigSupplier {
+class FileSupplier implements ConfigSupplier {
   private File file
   private Config config
 

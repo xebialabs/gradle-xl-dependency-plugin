@@ -1,6 +1,6 @@
 package com.xebialabs.gradle.dependency
 
-import com.xebialabs.gradle.dependency.supplier.DependencyManagementSupplier
+import com.xebialabs.gradle.dependency.supplier.ConfigSupplier
 import com.xebialabs.gradle.dependency.supplier.DependencySupplier
 import com.xebialabs.gradle.dependency.supplier.FileSupplier
 import org.gradle.api.Project
@@ -15,7 +15,7 @@ class DependencyManagementExtension {
     this.container = container
   }
 
-  def supplier(DependencyManagementSupplier dms) {
+  def supplier(ConfigSupplier dms) {
     container.addSupplier(dms)
   }
 
