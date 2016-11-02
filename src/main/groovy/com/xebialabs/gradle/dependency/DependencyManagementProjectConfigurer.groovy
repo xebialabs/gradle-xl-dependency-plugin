@@ -29,7 +29,7 @@ class DependencyManagementProjectConfigurer {
   static def configureExcludes(Project project, Configuration config, DependencyManagementContainer container) {
     container.blackList.each { ga ->
       container.resolveIfNecessary()
-      project.logger.info("Excluding ${ga.toMap()} from configuration ${config.getName()}")
+      project.logger.debug("Excluding ${ga.toMap()} from configuration ${config.getName()}")
       config.exclude ga.toMap()
     }
   }
@@ -51,7 +51,7 @@ class DependencyManagementProjectConfigurer {
           } else {
             groupArtifact = groupArtifact.withVersion(requestedVersion)
           }
-          project.logger.info("Rewriting $fromGa -> $groupArtifact")
+          project.logger.debug("Rewriting $fromGa -> $groupArtifact")
           details.useTarget(groupArtifact.toMap(details.requested))
         }
       }
@@ -65,10 +65,10 @@ class DependencyManagementProjectConfigurer {
         container.resolveIfNecessary()
         def version = container.getManagedVersion(details.requested.group, details.requested.name)
         if (version) {
-          project.logger.info("Resolved version $version for ${details.requested.group}:${details.requested.name}")
+          project.logger.debug("Resolved version $version for ${details.requested.group}:${details.requested.name}")
           details.useVersion(version)
         } else {
-          project.logger.info("No managed version for ${details.requested.group}:${details.requested.name} --> using version ${details.requested.version}")
+          project.logger.debug("No managed version for ${details.requested.group}:${details.requested.name} --> using version ${details.requested.version}")
         }
       }
     }

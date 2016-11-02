@@ -46,7 +46,7 @@ class DependencyManagementContainer {
   def registerVersionKey(String key, String version) {
     if (!versions[key]) {
       versions.put(key, version)
-      logger.info("Registering version $key = $version")
+      logger.debug("Registering version $key = $version")
       // Also register the version key on each project, useful with for example $scalaVersion
       projects.each {
         it.extensions.findByType(ExtraPropertiesExtension).set(key, version)
@@ -57,7 +57,7 @@ class DependencyManagementContainer {
   def addManagedVersion(String group, String artifact, String version) {
     def ga = resolve("$group:$artifact")
     def resolvedVersion = resolve(version)
-    logger.info("Adding managed version $ga -> $resolvedVersion")
+    logger.debug("Adding managed version $ga -> $resolvedVersion")
     managedVersions[ga] = resolvedVersion
   }
 
