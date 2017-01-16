@@ -1,3 +1,15 @@
+
+buildscript {
+  repositories {
+    maven {
+      url "https://plugins.gradle.org/m2/"
+    }
+  }
+  dependencies {
+    classpath "com.gradle.publish:plugin-publish-plugin:0.9.7"
+  }
+}
+
 plugins {
   id "groovy"
   id "idea"
@@ -5,6 +17,8 @@ plugins {
   id "com.github.hierynomus.license" version "0.11.0"
   id "org.ajoberstar.release-opinion" version "1.4.0-rc.1"
 }
+
+apply plugin: "com.gradle.plugin-publish"
 
 group = 'com.xebialabs.gradle.plugins'
 defaultTasks 'build'
@@ -77,15 +91,18 @@ if (JavaVersion.current().isJava8Compatible()) {
   }
 }
 
-uploadArchives {
-  repositories.mavenDeployer {
-    repository(url: "${project.property("nexusBaseUrl")}/repositories/releases") {
-      authentication(userName: "${project.property("nexusUserName")}", password: "${project.property("nexusPassword")}")
-    }
-    snapshotRepository(url: "${project.property("nexusBaseUrl")}/repositories/snapshots") {
-      authentication(userName: "${project.property("nexusUserName")}", password: "${project.property("nexusPassword")}")
+pluginBundle {
+  website = 'http://www.xebialabs.com/'
+  vcsUrl = 'https://github.com/xebialabs/gradle-xl-dependency-plugin'
+  description = 'XebiaLabs dependency plugin'
+  tags = ['xebialabs', 'plugins', 'dependencies']
+
+  plugins {
+    dependencyPlugin {
+      id = 'xebialabs.dependency'
+      displayName = 'XebiaLabs dependency plugin'
     }
   }
 }
 
-tasks.release.dependsOn([build, uploadArchives])
+tasks.release.dependsOn([build, publishPlugins])
