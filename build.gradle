@@ -100,7 +100,7 @@ pluginBundle {
 
   plugins {
     dependencyPlugin {
-      id = 'xebialabs.dependency'
+      id = 'com.xebialabs.dependency'
       displayName = 'XebiaLabs dependency plugin'
     }
   }

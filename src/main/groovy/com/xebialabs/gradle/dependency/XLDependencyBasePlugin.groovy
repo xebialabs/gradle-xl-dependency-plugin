@@ -8,7 +8,7 @@ class XLDependencyBasePlugin implements Plugin<Project> {
 
   public void apply(Project project) {
     if (project.rootProject != project) {
-      throw new IllegalArgumentException("Can apply 'xebialabs.dependency.base' only on the rootProject. Tried to apply on ${project.name}.")
+      throw new IllegalArgumentException("Can apply 'com.xebialabs.dependency.base' only on the rootProject. Tried to apply on ${project.name}.")
     }
     this.project = project
     DependencyManagementContainer container = new DependencyManagementContainer(project)

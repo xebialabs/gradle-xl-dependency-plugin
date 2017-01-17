@@ -22,16 +22,16 @@ buildscript {
   }
 
   dependencies {
-    classpath "com.xebialabs.gradle.plugins:gradle-xl-dependency-plugin:{plugin_version}"
+    classpath "gradle.plugin.com.xebialabs:gradle-xl-dependency-plugin:{plugin_version}"
   }
 
-  apply plugin: 'xebialabs.dependency'
+  apply plugin: 'com.xebialabs.dependency'
 }
 ----
 
 == Plugins contained
 
-=== The 'xebialabs.dependency.base' plugin
+=== The 'com.xebialabs.dependency.base' plugin
 This plugin is the _base_ plugin that doesn't force any opinions on the project. Note this plugin can _only_ be applied on the `rootProject`
 
 ==== What it does
@@ -40,8 +40,8 @@ When applied the plugin does the following:
 - An extension named `dependencyManagement` is added to the `rootProject`
 - The `resolutionStrategy` of `allProjects.configurations` is set to resolve versions against this plugin
 
-=== The 'xebialabs.dependency' plugin
-This plugin builds on top of the `xebialabs.dependency.base` plugin, and adds the following opinions on top of the `xebialabs.dependency.base` plugin:
+=== The 'com.xebialabs.dependency' plugin
+This plugin builds on top of the `com.xebialabs.dependency.base` plugin, and adds the following opinions on top of the `xebialabs.dependency.base` plugin:
 
 1. It will take any overridden versions defined on the `rootProject` (See: <<Version keys as project properties>>)
 2. It will load a `${rootProject.projectDir}/gradle/dependencies.conf` file which is required to be present
@@ -149,7 +149,7 @@ dependencyManagement {
 [source]
 .build.gradle
 ----
-apply plugin: 'xebialabs.dependency.base'
+apply plugin: 'com.xebialabs.dependency.base'
 apply plugin: 'java'
 
 dependencyManagement {
@@ -164,7 +164,7 @@ dependencies {
 
 If you would launch gradle now using the following command line: `gradle build -PdependencyManagement.versions.junitVersion=4.11`, it would force junit to the `4.11` version instead of the 4.12 specified in the `reference.conf` file.
 
-The `xebialabs.dependency` plugin takes care of this automatically.
+The `com.xebialabs.dependency` plugin takes care of this automatically.
 
 === Adding your own supplier
 It is possible to add your own `DependencyManagementSupplier` that will supply the dependency management information to the plugin. You can do so by extending the `com.xebialabs.gradle.dependency.supplier.DependencyManagementSupplier`.
@@ -174,7 +174,7 @@ You can add your own supplier to your build.gradle file using the following snip
 [source]
 .build.gradle
 ----
-apply plugin: 'xebialabs.dependency.base'
+apply plugin: 'com.xebialabs.dependency.base'
 
 dependencyManagement {
   supplier <your class>

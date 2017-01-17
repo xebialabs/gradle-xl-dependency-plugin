@@ -5,6 +5,8 @@ import nebula.test.dependencies.DependencyGraph
 import nebula.test.dependencies.GradleDependencyGenerator
 
 class XLDependencyPluginSpec extends IntegrationSpec {
+
+  def pluginName = 'com.xebialabs.dependency'
   File repoDir
 
   def setup() {
@@ -47,7 +49,7 @@ class XLDependencyPluginSpec extends IntegrationSpec {
 
   def "should apply the version override file from the rootProject"() {
     given:
-    baseBuildFile(['xebialabs.dependency']) << """
+    baseBuildFile([pluginName]) << """
     assert junitVersion == '4.12'
     """
     when:
@@ -61,7 +63,7 @@ class XLDependencyPluginSpec extends IntegrationSpec {
     given:
     settingsFile << "include 'sub'"
     buildFile << """
-    apply plugin: 'xebialabs.dependency'
+    apply plugin: 'com.xebialabs.dependency'
 
     assert allprojects.size() == 2
     allprojects {
@@ -82,7 +84,7 @@ class XLDependencyPluginSpec extends IntegrationSpec {
 
   def "should apply a reference file from the currently built project"() {
     given:
-    baseBuildFile(['xebialabs.dependency']) << """
+    baseBuildFile([pluginName]) << """
       dependencyManagement {
         importConf project.file("reference.conf")
       }
@@ -104,7 +106,7 @@ class XLDependencyPluginSpec extends IntegrationSpec {
   }
 
   def "should take version from gradle/dependencies.conf over reference.conf"() {
-    baseBuildFile(['xebialabs.dependency']) << """
+    baseBuildFile([pluginName]) << """
       dependencyManagement {
         importConf project.file("reference.conf")
       }
@@ -125,7 +127,7 @@ class XLDependencyPluginSpec extends IntegrationSpec {
   }
 
   def "should substitute placeholders"() {
-    baseBuildFile(['xebialabs.dependency']) << """
+    baseBuildFile([pluginName]) << """
       dependencyManagement {
         importConf project.file("reference.conf")
       }
@@ -149,7 +151,7 @@ class XLDependencyPluginSpec extends IntegrationSpec {
   }
 
   def "should apply a dependencies file with a dependency local to the project"() {
-    baseBuildFile(['xebialabs.dependency', 'java']) << writeDepTask() << """
+    baseBuildFile([pluginName, 'java']) << writeDepTask() << """
       dependencyManagement {
         importConf project.file("dependencies.conf")
       }
@@ -174,7 +176,7 @@ class XLDependencyPluginSpec extends IntegrationSpec {
   }
 
   def "should apply a dependencies file with a dependency-set local to the project"() {
-    baseBuildFile(['xebialabs.dependency', 'java']) << writeDepTask() << """
+    baseBuildFile([pluginName, 'java']) << writeDepTask() << """
       dependencyManagement {
         importConf project.file("dependencies.conf")
       }
@@ -213,7 +215,7 @@ class XLDependencyPluginSpec extends IntegrationSpec {
         dependencies: [ "junit:junit:$junitVersion" ]
       }
     '''
-    baseBuildFile(['xebialabs.dependency', 'java']) << writeDepTask() << """
+    baseBuildFile([pluginName, 'java']) << writeDepTask() << """
       dependencyManagement {
         importConf project.file("reference.conf")
       }
@@ -249,7 +251,7 @@ class XLDependencyPluginSpec extends IntegrationSpec {
         dependencies: [ "test:zip-dependency:1.0@zip" ]
       }
     '''
-    baseBuildFile(['xebialabs.dependency', 'java']) << writeDepTask() << """
+    baseBuildFile([pluginName, 'java']) << writeDepTask() << """
       dependencies {
         compile 'test:zip-dependency@zip'
       }
@@ -274,7 +276,7 @@ class XLDependencyPluginSpec extends IntegrationSpec {
         }
       }
     '''
-    baseBuildFile(['xebialabs.dependency', 'java']) << writeDepTask() << """
+    baseBuildFile([pluginName, 'java']) << writeDepTask() << """
       dependencies {
         compile 'foo:bar'
       }
@@ -299,7 +301,7 @@ class XLDependencyPluginSpec extends IntegrationSpec {
         }
       }
     '''
-    baseBuildFile(['xebialabs.dependency', 'java']) << writeDepTask() << """
+    baseBuildFile([pluginName, 'java']) << writeDepTask() << """
       dependencies {
         compile 'foo:bar'
       }
@@ -327,7 +329,7 @@ class XLDependencyPluginSpec extends IntegrationSpec {
       }
     '''
     buildFile << '''
-      apply plugin: 'xebialabs.dependency'
+      apply plugin: 'com.xebialabs.dependency'
 
       allprojects.size() == 2
       allprojects { p ->
@@ -386,7 +388,7 @@ class XLDependencyPluginSpec extends IntegrationSpec {
         dependencies: [ "$foo:$foo:$junitVersion" ]
       }
     '''
-    baseBuildFile(['xebialabs.dependency', 'java']) << writeDepTask() << """
+    baseBuildFile([pluginName, 'java']) << writeDepTask() << """
       dependencyManagement {
         importConf project.file("reference.conf")
       }

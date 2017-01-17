@@ -5,7 +5,7 @@ import org.gradle.api.GradleException
 import org.gradle.api.internal.plugins.PluginApplicationException
 
 class ApplyPluginSpec extends ProjectSpec {
-  def pluginName = 'xebialabs.dependency'
+  def pluginName = 'com.xebialabs.dependency'
 
   def setup() {
     def folder = new File(projectDir, "gradle")
@@ -52,7 +52,7 @@ class ApplyPluginSpec extends ProjectSpec {
     new File(projectDir, 'gradle/dependencies.conf').delete()
 
     when:
-    project.apply plugin: 'xebialabs.dependency'
+    project.apply plugin: pluginName
 
     then:
     def ex = thrown(GradleException)
