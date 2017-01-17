@@ -20,7 +20,8 @@ plugins {
 
 apply plugin: "com.gradle.plugin-publish"
 
-group = 'gradle.plugin.com.xebialabs'
+// this magically becomes gradle.plugin.com.xebialabs
+group = 'com.xebialabs'
 defaultTasks 'build'
 
 sourceCompatibility = 1.7
