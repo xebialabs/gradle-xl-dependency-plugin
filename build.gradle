@@ -60,7 +60,7 @@ dependencies {
   testCompile('org.spockframework:spock-core:1.0-groovy-2.4') {
     exclude group: 'org.codehaus.groovy', module: 'groovy-all'
   }
-  testCompile 'com.netflix.nebula:nebula-test:4.2.2'
+  testCompile 'com.netflix.nebula:nebula-test:4.4.3'
 }
 
 task sourcesJar(type: Jar) {
