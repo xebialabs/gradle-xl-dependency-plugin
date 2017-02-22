@@ -2,7 +2,6 @@ package com.xebialabs.gradle.dependency
 
 import com.xebialabs.gradle.dependency.domain.GroupArtifact
 import com.xebialabs.gradle.dependency.supplier.ConfigSupplier
-import com.xebialabs.gradle.dependency.supplier.DependencyManagementSupplier
 import com.xebialabs.gradle.dependency.supplier.MasterDependencyConfigSupplier
 import groovy.text.SimpleTemplateEngine
 import org.gradle.api.Project
@@ -19,6 +18,8 @@ class DependencyManagementContainer {
   private boolean resolved = false
 
   Map versions = [:].withDefault { "" }
+
+  Map<String, String> resolveCache = [:].withDefault { String s -> s ? engine.createTemplate(s).make(versions).toString() : s }
   Map managedVersions = [:]
   List<GroupArtifact> blackList = []
   Map rewrites = [:]
@@ -74,7 +75,7 @@ class DependencyManagementContainer {
   }
 
   def resolve(String s) {
-    return s ? engine.createTemplate(s).make(versions).toString() : s
+    return resolveCache.get(s)
   }
 
   def blackList(String group, String artifact) {
