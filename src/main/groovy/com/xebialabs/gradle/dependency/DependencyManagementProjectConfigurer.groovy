@@ -1,15 +1,11 @@
 package com.xebialabs.gradle.dependency
 
 import com.xebialabs.gradle.dependency.domain.GroupArtifact
-import com.xebialabs.gradle.dependency.domain.GroupArtifactVersion
 import org.gradle.api.Action
 import org.gradle.api.Project
 import org.gradle.api.artifacts.Configuration
 import org.gradle.api.artifacts.DependencyResolveDetails
 import org.gradle.api.artifacts.ResolutionStrategy
-import org.gradle.api.artifacts.component.ModuleComponentSelector
-import org.gradle.api.artifacts.result.ResolvedDependencyResult
-import org.gradle.api.plugins.MavenPlugin
 
 class DependencyManagementProjectConfigurer {
 
@@ -18,8 +14,7 @@ class DependencyManagementProjectConfigurer {
     project.getConfigurations().all { Configuration config ->
       if (config.name != 'zinc') { // The Scala compiler 'zinc' configuration should not be managed by us
         config.resolutionStrategy { ResolutionStrategy rs ->
-          rs.eachDependency(rewrite(project, container))
-          rs.eachDependency(forceVersion(project, container))
+          rs.eachDependency(manageDependency(project, container))
         }
         configureExcludes(project, config, container)
       }
@@ -34,11 +29,16 @@ class DependencyManagementProjectConfigurer {
     }
   }
 
-  private static Action<? super DependencyResolveDetails> rewrite(Project project, DependencyManagementContainer container) {
+  private static Action<? super DependencyResolveDetails> manageDependency(Project project, DependencyManagementContainer container) {
     return new Action<DependencyResolveDetails>() {
       @Override
       void execute(DependencyResolveDetails details) {
         container.resolveIfNecessary()
+        rewrite(details)
+        enforceVersion(details)
+      }
+
+      private void rewrite(DependencyResolveDetails details) {
         def rewrites = container.rewrites
 
         def fromGa = new GroupArtifact(details.requested.group, details.requested.name)
@@ -53,16 +53,11 @@ class DependencyManagementProjectConfigurer {
           }
           project.logger.debug("Rewriting $fromGa -> $groupArtifact")
           details.useTarget(groupArtifact.toMap(details.requested))
+
         }
       }
-    }
-  }
 
-  private static Action<DependencyResolveDetails> forceVersion(Project project, DependencyManagementContainer container) {
-    return new Action<DependencyResolveDetails>() {
-      @Override
-      void execute(DependencyResolveDetails details) {
-        container.resolveIfNecessary()
+      private void enforceVersion(DependencyResolveDetails details) {
         def version = container.getManagedVersion(details.requested.group, details.requested.name)
         if (version) {
           project.logger.debug("Resolved version $version for ${details.requested.group}:${details.requested.name}")
@@ -73,4 +68,5 @@ class DependencyManagementProjectConfigurer {
       }
     }
   }
+
 }
