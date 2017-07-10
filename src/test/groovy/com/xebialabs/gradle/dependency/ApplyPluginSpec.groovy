@@ -57,7 +57,7 @@ class ApplyPluginSpec extends ProjectSpec {
     then:
     def ex = thrown(GradleException)
     ex.getClass() == PluginApplicationException
-    ex.getCause().getClass() == FileNotFoundException
+    ex.getCause().getClass() == org.gradle.api.UncheckedIOException
     ex.getCause().getMessage() =~ "Cannot configure dependency management from non-existing file .*/gradle/dependencies.conf"
   }
 }
