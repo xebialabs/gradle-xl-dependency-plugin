@@ -65,15 +65,6 @@ publishing {
 }
 
 tasks {
-    named<Upload>("uploadArchives")
-
-    register<NebulaRelease>("nebulaRelease")
-
-
-
-}
-
-tasks {
     register<NebulaRelease>("nebulaRelease")
 
     named<Upload>("uploadArchives") {
