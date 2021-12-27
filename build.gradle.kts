@@ -19,7 +19,7 @@ plugins {
     id("nebula.release") version "15.3.1"
 }
 
-group = "com.xebialabs"
+group = "gradle.plugin.com.xebialabs"
 project.defaultTasks = listOf("build")
 
 java {
