@@ -10,12 +10,12 @@ buildscript {
 }
 
 plugins {
-    kotlin("jvm") version "1.4.20"
+    kotlin("jvm") version "1.6.21"
 
     id("groovy")
     id("idea")
     id("maven-publish")
-    id("com.github.hierynomus.license") version "0.11.0"
+    id("com.github.hierynomus.license") version "0.16.1"
     id("nebula.release") version "15.3.1"
 }
 
@@ -67,9 +67,10 @@ publishing {
 tasks {
     register<NebulaRelease>("nebulaRelease")
 
-    named<Upload>("uploadArchives") {
-        dependsOn(named("publish"))
-    }
+    // TODO not needed for 3.0.x
+//    named<Upload>("uploadArchives") {
+//        dependsOn(named("publish"))
+//    }
 
     register("dumpVersion") {
         doLast {
