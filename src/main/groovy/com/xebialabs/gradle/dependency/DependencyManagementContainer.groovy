@@ -15,6 +15,7 @@ class DependencyManagementContainer {
   private SimpleTemplateEngine engine = new SimpleTemplateEngine()
   private MasterDependencyConfigSupplier supplier = new MasterDependencyConfigSupplier()
   private List<Project> projects = []
+  private Project rootProject = null
   private boolean resolved = false
 
   Map versions = [:].withDefault { "" }
@@ -25,6 +26,7 @@ class DependencyManagementContainer {
   Map rewrites = [:]
 
   DependencyManagementContainer(Project project) {
+    this.rootProject = project
     projects.addAll(project.allprojects)
   }
 
@@ -41,7 +43,17 @@ class DependencyManagementContainer {
     this.supplier.collectVersions(this)
     // WE want to collect the exclusions late, however that somehow does not work.
     this.supplier.collectExclusions(this)
+    exposeVersions()
     resolved = false
+  }
+
+  private def exposeVersions() {
+    versions.collect { k, v ->
+      if (v !== "" && k != "out") {
+        logger.debug("${rootProject.name} added $k=$v")
+        rootProject.extensions.extraProperties.set(k, v)
+      }
+    }
   }
 
   def registerVersionKey(String key, String version) {
