@@ -47,6 +47,8 @@ dependencies {
     implementation("com.typesafe:config:1.2.1")
 }
 
+val repositoryName = if (project.version.toString().endsWith("-SNAPSHOT")) "snapshots" else "releases"
+
 publishing {
     publications {
         create<MavenPublication>("maven") {
@@ -55,7 +57,7 @@ publishing {
     }
     repositories {
         maven {
-            url = uri("${project.property("nexusBaseUrl")}/repositories/releases")
+            url = uri("${project.property("nexusBaseUrl")}/repositories/${repositoryName}")
             credentials {
                 username = project.property("nexusUserName").toString()
                 password = project.property("nexusPassword").toString()
