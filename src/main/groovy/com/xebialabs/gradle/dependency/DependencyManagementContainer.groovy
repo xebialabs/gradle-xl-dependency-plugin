@@ -18,6 +18,8 @@ class DependencyManagementContainer {
   private Project rootProject = null
   private boolean resolved = false
 
+  boolean manageDependencies = true
+
   Map versions = [:].withDefault { "" }
 
   Map<String, String> resolveCache = [:].withDefault { String s -> s ? engine.createTemplate(s).make(versions).toString() : s }
