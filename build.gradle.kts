@@ -10,12 +10,12 @@ buildscript {
 }
 
 plugins {
-    kotlin("jvm") version "1.4.20"
+    kotlin("jvm") version "1.6.21"
 
     id("groovy")
     id("idea")
     id("maven-publish")
-    id("com.github.hierynomus.license") version "0.11.0"
+    id("com.github.hierynomus.license") version "0.16.1"
     id("nebula.release") version "15.3.1"
 }
 
@@ -47,6 +47,8 @@ dependencies {
     implementation("com.typesafe:config:1.2.1")
 }
 
+val repositoryName = if (project.version.toString().endsWith("-SNAPSHOT")) "snapshots" else "releases"
+
 publishing {
     publications {
         create<MavenPublication>("maven") {
@@ -55,7 +57,7 @@ publishing {
     }
     repositories {
         maven {
-            url = uri("${project.property("nexusBaseUrl")}/repositories/releases")
+            url = uri("${project.property("nexusBaseUrl")}/repositories/${repositoryName}")
             credentials {
                 username = project.property("nexusUserName").toString()
                 password = project.property("nexusPassword").toString()
@@ -67,9 +69,10 @@ publishing {
 tasks {
     register<NebulaRelease>("nebulaRelease")
 
-    named<Upload>("uploadArchives") {
-        dependsOn(named("publish"))
-    }
+    // TODO not needed for 3.0.x
+//    named<Upload>("uploadArchives") {
+//        dependsOn(named("publish"))
+//    }
 
     register("dumpVersion") {
         doLast {
