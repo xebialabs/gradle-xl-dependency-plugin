@@ -36,7 +36,7 @@ class XLDependencyPlatformPlugin implements Plugin<Project> {
               }
               project.logger.info("Added $artifactModule:$artifactVersion to ${projectName}")
             } else {
-              project.logger.info("Unable to add $artifactModule to ${projectName}")
+              project.logger.info("Unable to add $artifactModule to ${projectName} as a constraint")
             }
           }
         }

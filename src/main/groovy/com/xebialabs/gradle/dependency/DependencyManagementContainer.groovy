@@ -22,7 +22,10 @@ class DependencyManagementContainer {
 
   Map versions = [:].withDefault { "" }
 
-  Map<String, String> resolveCache = [:].withDefault { String s -> s ? engine.createTemplate(s).make(versions).toString() : s }
+  Map<String, String> resolveCache = [:].withDefault { String s ->
+    Map resolutionContextMap = (versions + rootProject.extensions.extraProperties.properties).withDefault { "" }
+    s ? engine.createTemplate(s).make(resolutionContextMap).toString() : s
+  }
   Map managedVersions = [:]
   List<GroupArtifact> blackList = []
   Map rewrites = [:]
@@ -50,10 +53,25 @@ class DependencyManagementContainer {
   }
 
   private def exposeVersions() {
-    versions.collect { k, v ->
-      if (v !== "" && k != "out") {
-        logger.debug("${rootProject.name} added $k=$v")
-        rootProject.extensions.extraProperties.set(k, v)
+    versions << versions.collectEntries { k, v ->
+      if (k !== "out") {
+        if (rootProject.extensions.extraProperties.has(k)) {
+          def overrideValue = rootProject.extensions.extraProperties.get(k)
+          logger.info("${rootProject.name} added overriden version ${k}=${overrideValue} (found in gradle extra properties)")
+          rootProject.extensions.extraProperties.set(k, overrideValue)
+          [k:overrideValue]
+        } else {
+          if (v !== "") {
+            logger.info("${rootProject.name} added version $k=$v")
+            rootProject.extensions.extraProperties.set(k, v)
+            [k:v]
+          } else {
+            logger.error("Unable to expose version ${k} to gradle extra properties. Check if it is defined in gradle.properties or .conf file")
+            [k:""]
+          }
+        }
+      } else {
+        [:]
       }
     }
   }
