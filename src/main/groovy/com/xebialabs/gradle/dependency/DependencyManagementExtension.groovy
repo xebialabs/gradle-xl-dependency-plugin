@@ -32,4 +32,9 @@ class DependencyManagementExtension {
     project.logger.info("Added dependency management artifact: $s")
     container.addSupplier(new DependencySupplier(this.project, s))
   }
+
+  def manageDependencies(Boolean manageDependencies) {
+    project.logger.info("Dependencies managed by Dependency management plugin: $manageDependencies")
+    container.manageDependencies = manageDependencies
+  }
 }
