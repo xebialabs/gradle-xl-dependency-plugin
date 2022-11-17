@@ -1,13 +1,4 @@
-import java.time.LocalDateTime
-import java.time.format.DateTimeFormatter
-
-buildscript {
-    repositories {
-        maven {
-            url = uri("https://plugins.gradle.org/m2/")
-        }
-    }
-}
+import nebula.plugin.release.git.opinion.Strategies
 
 plugins {
     kotlin("jvm") version "1.6.21"
@@ -16,11 +7,15 @@ plugins {
     id("idea")
     id("maven-publish")
     id("com.github.hierynomus.license") version "0.16.1"
-    id("nebula.release") version "15.3.1"
+    id("nebula.release") version "17.1.0"
 }
 
 group = "gradle.plugin.com.xebialabs"
 project.defaultTasks = listOf("build")
+
+release {
+    defaultVersionStrategy = Strategies.getSNAPSHOT()
+}
 
 java {
     sourceCompatibility = JavaVersion.VERSION_11
@@ -28,11 +23,6 @@ java {
     withSourcesJar()
     withJavadocJar()
 }
-
-val releasedVersion = "2.0.0-${LocalDateTime.now().format(DateTimeFormatter.ofPattern("Mdd.Hmm"))}"
-project.extra.set("releasedVersion", releasedVersion)
-
-repositories { mavenCentral() }
 
 idea {
     module {
@@ -67,7 +57,6 @@ publishing {
 }
 
 tasks {
-    register<NebulaRelease>("nebulaRelease")
 
     // TODO not needed for 3.0.x
 //    named<Upload>("uploadArchives") {
@@ -77,7 +66,7 @@ tasks {
     register("dumpVersion") {
         doLast {
             file(buildDir).mkdirs()
-            file("$buildDir/version.dump").writeText("version=${releasedVersion}")
+            file("$buildDir/version.dump").writeText("version=${project.version}")
         }
     }
 
