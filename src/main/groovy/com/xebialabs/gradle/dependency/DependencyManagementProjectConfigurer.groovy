@@ -1,6 +1,8 @@
 package com.xebialabs.gradle.dependency
 
 import com.xebialabs.gradle.dependency.domain.GroupArtifact
+import com.xebialabs.gradle.dependency.rules.DependencyManagementExclusionRules
+import com.xebialabs.gradle.dependency.rules.DependencyManagementRewriteRules
 import org.gradle.api.Action
 import org.gradle.api.Project
 import org.gradle.api.artifacts.Configuration
@@ -12,22 +14,24 @@ class DependencyManagementProjectConfigurer {
   static def configureProject(Project project, DependencyManagementContainer container) {
     // Contract for all is that it executes the closure for all currently assigned objects, and any objects added later.
     project.getConfigurations().all { Configuration config ->
-      if (config.name != 'zinc') { // The Scala compiler 'zinc' configuration should not be managed by us
-        if (container.manageDependencies) {
+      if (!container.useJavaPlatform) {
+        if (config.name != 'zinc') { // The Scala compiler 'zinc' configuration should not be managed by us
           config.resolutionStrategy { ResolutionStrategy rs ->
             rs.eachDependency(manageDependency(project, container))
           }
+          configureExcludes(project, config, container)
         }
-        configureExcludes(project, config, container)
       }
     }
   }
 
-  static def configureExcludes(Project project, Configuration config, DependencyManagementContainer container) {
+  private static def configureExcludes(Project project, Configuration config, DependencyManagementContainer container) {
     container.blackList.each { ga ->
-      container.resolveIfNecessary()
-      project.logger.debug("Excluding ${ga.toMap()} from configuration ${config.getName()}")
-      config.exclude ga.toMap()
+      if (!container.rewrites[ga]) {
+        // exclude only dependencies that do NOT have a rewrite
+        project.logger.debug("Excluding ${ga.toMap()} from configuration ${config.getName()}")
+        config.exclude ga.toMap()
+      }
     }
   }
 
@@ -71,4 +75,15 @@ class DependencyManagementProjectConfigurer {
     }
   }
 
+  def static configureRewrites(DependencyManagementContainer container, Project project) {
+    if (container.useJavaPlatform) {
+      project.getDependencies().modules(new DependencyManagementRewriteRules(container, project))
+    }
+  }
+
+  static def configureExcludeRules(DependencyManagementContainer container, Project project) {
+    if (container.useJavaPlatform) {
+      project.getDependencies().components(new DependencyManagementExclusionRules(container, project))
+    }
+  }
 }

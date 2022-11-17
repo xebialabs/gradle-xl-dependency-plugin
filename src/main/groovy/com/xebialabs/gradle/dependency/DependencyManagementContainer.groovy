@@ -1,15 +1,17 @@
 package com.xebialabs.gradle.dependency
 
+import com.typesafe.config.Config
 import com.xebialabs.gradle.dependency.domain.GroupArtifact
 import com.xebialabs.gradle.dependency.supplier.ConfigSupplier
 import com.xebialabs.gradle.dependency.supplier.MasterDependencyConfigSupplier
 import groovy.text.SimpleTemplateEngine
 import org.gradle.api.Project
+import org.gradle.api.artifacts.DependencyResolutionListener
+import org.gradle.api.artifacts.ResolvableDependencies
 import org.gradle.api.logging.Logger
 import org.gradle.api.logging.Logging
-import org.gradle.api.plugins.ExtraPropertiesExtension
 
-class DependencyManagementContainer {
+class DependencyManagementContainer implements DependencyResolutionListener {
   private static final Logger logger = Logging.getLogger(DependencyManagementContainer.class)
 
   private SimpleTemplateEngine engine = new SimpleTemplateEngine()
@@ -18,8 +20,10 @@ class DependencyManagementContainer {
   private Project rootProject = null
   private boolean resolved = false
 
-  boolean manageDependencies = true
+  // useJavaPlatform - false is pre gradle 7 style of managing dependencies
+  boolean useJavaPlatform = false
 
+  // versions MUST be valid simple groovy template string keys (i.e. cannot be 'something.nested.property')
   Map versions = [:].withDefault { "" }
 
   Map<String, String> resolveCache = [:].withDefault { String s ->
@@ -27,19 +31,31 @@ class DependencyManagementContainer {
     s ? engine.createTemplate(s).make(resolutionContextMap).toString() : s
   }
   Map managedVersions = [:]
+  Map<String, List<String>> managedExcludes = new HashMap<>()
   List<GroupArtifact> blackList = []
   Map rewrites = [:]
 
   DependencyManagementContainer(Project project) {
     this.rootProject = project
+    this.rootProject.gradle.addListener(this)
     projects.addAll(project.allprojects)
   }
 
   def resolveIfNecessary() {
     if (!resolved) {
+      logger.info("Resolving project management plugin container configuration")
       this.supplier.collectDependencies(this)
-      this.supplier.collectRewrites(this)
+      // this.supplier.collectRewrites(this) - loaded when created
       resolved = true
+      configureProjects()
+    }
+  }
+
+  private def configureProjects() {
+    // once container is resolved we can configure rewrites - ONCE
+    projects.each { Project p ->
+      DependencyManagementProjectConfigurer.configureRewrites(this, p)
+      DependencyManagementProjectConfigurer.configureExcludeRules(this, p)
     }
   }
 
@@ -48,7 +64,8 @@ class DependencyManagementContainer {
     this.supplier.collectVersions(this)
     // WE want to collect the exclusions late, however that somehow does not work.
     this.supplier.collectExclusions(this)
-    exposeVersions()
+    this.supplier.collectRewrites(this)
+    exposeVersions() // versions should be exposed via registerVersionKey
     resolved = false
   }
 
@@ -82,16 +99,25 @@ class DependencyManagementContainer {
       logger.debug("Registering version $key = $version")
       // Also register the version key on each project, useful with for example $scalaVersion
       projects.each {
-        it.extensions.findByType(ExtraPropertiesExtension).set(key, version)
+        it.extensions.extraProperties.set(key, version)
       }
     }
   }
 
   def addManagedVersion(String group, String artifact, String version) {
+    addManagedVersion(group, artifact, version, [])
+  }
+
+  def addManagedVersion(String group, String artifact, String version, List<String> excludes) {
     def ga = resolve("$group:$artifact")
     def resolvedVersion = resolve(version)
-    logger.debug("Adding managed version $ga -> $resolvedVersion")
+    logger.debug("Adding managed version $ga -> $resolvedVersion, excludes: $excludes")
     managedVersions[ga] = resolvedVersion
+    def oldValue = managedExcludes.getOrDefault(ga, [])
+    oldValue.addAll(excludes)
+    if (!oldValue.empty) {
+      managedExcludes.put(ga, oldValue)
+    }
   }
 
   String getManagedVersion(String group, String artifact) {
@@ -102,7 +128,6 @@ class DependencyManagementContainer {
     } else {
       logger.debug("Unable to find $ga in $managedVersions")
     }
-
     return null
   }
 
@@ -119,5 +144,23 @@ class DependencyManagementContainer {
     def fromGa = new GroupArtifact(fromGroup, fromArtifact)
     def toGa = new GroupArtifact(toGroup, toArtifact)
     this.rewrites.put(fromGa, toGa)
+  }
+
+  @Override
+  void beforeResolve(final ResolvableDependencies dependencies) {
+    this.resolveIfNecessary()
+  }
+
+  @Override
+  void afterResolve(final ResolvableDependencies dependencies) {
+    // nothing
+  }
+
+  List<Config> getConfigs() {
+    return supplier.getConfigs()
+  }
+
+  Set<File> getSuppliedConfigFiles() {
+    return supplier.getSuppliedConfigFiles()
   }
 }

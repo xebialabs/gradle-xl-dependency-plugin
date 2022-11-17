@@ -14,7 +14,7 @@ class ProjectSupplier implements ConfigSupplier {
   }
 
   @Override
-  Config getConfig() {
+  Config getConfig(ConfigFileCollector collector) {
     def versions = project.properties.findAll { k, v -> k.startsWith(VERSION_KEY_PREFIX) }
     if (versions) {
       return ConfigFactory.parseMap(versions)

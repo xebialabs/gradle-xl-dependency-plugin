@@ -11,10 +11,11 @@ class FileSupplier implements ConfigSupplier {
     this.file = file
   }
 
-  Config getConfig() {
+  Config getConfig(ConfigFileCollector collector) {
     if (!config) {
       config = ConfigFactory.parseFile(file).resolve()
     }
+    collector.collect(file)
     return config
   }
 }
