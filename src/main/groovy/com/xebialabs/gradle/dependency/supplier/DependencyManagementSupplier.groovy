@@ -1,10 +1,8 @@
 package com.xebialabs.gradle.dependency.supplier
 
-import com.typesafe.config.Config
-import com.typesafe.config.ConfigList
-import com.typesafe.config.ConfigValue
-import com.typesafe.config.ConfigValueType
+import com.typesafe.config.*
 import com.xebialabs.gradle.dependency.DependencyManagementContainer
+import groovy.util.ConfigObject
 
 abstract class DependencyManagementSupplier {
 
@@ -57,10 +55,21 @@ abstract class DependencyManagementSupplier {
         ConfigObject o = v as ConfigObject
         String group = o.get("group").unwrapped()
         String version = o.get("version").unwrapped()
-        (o.get("artifacts") as ConfigList).each { ConfigValue entry ->
-          container.addManagedVersion(group, entry.unwrapped() as String, version)
+        def emptyExcludes = ConfigValueFactory.fromIterable([])
+        if (o.containsKey("artifacts")) {
+          def excludes = (o.get("excludes", emptyExcludes) as ConfigList).collect { ConfigValue entry ->
+            return entry.unwrapped() as String
+          }
+          (o.get("artifacts") as ConfigList).each { ConfigValue entry ->
+            container.addManagedVersion(group, entry.unwrapped() as String, version, excludes)
+          }
+        } else {
+          String artifact = o.get("artifact").unwrapped()
+          def excludes = (o.get("excludes", emptyExcludes) as ConfigList).collect { ConfigValue entry ->
+            return entry.unwrapped() as String
+          }
+          container.addManagedVersion(group, artifact, version, excludes)
         }
-
       }
     }
   }

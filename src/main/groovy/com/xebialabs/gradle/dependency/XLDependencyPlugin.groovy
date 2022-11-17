@@ -10,9 +10,13 @@ class XLDependencyPlugin implements Plugin<Project> {
   void apply(Project project) {
     project.apply plugin: "com.xebialabs.dependency.base"
 
+    def defaultConfFile = project.file("gradle/dependencies.conf")
+
     project.dependencyManagement {
       supplier new ProjectSupplier(project)
-      importConf project.file("gradle/dependencies.conf")
+      if (defaultConfFile.exists()) {
+        importConf defaultConfFile
+      }
     }
 
   }
