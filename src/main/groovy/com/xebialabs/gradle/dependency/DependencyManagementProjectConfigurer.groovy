@@ -66,8 +66,13 @@ class DependencyManagementProjectConfigurer {
       private void enforceVersion(DependencyResolveDetails details) {
         def version = container.getManagedVersion(details.requested.group, details.requested.name)
         if (version) {
-          project.logger.debug("Resolved version $version for ${details.requested.group}:${details.requested.name}")
-          details.useVersion(version)
+          if (version.startsWith("\${")) {
+            // version is not resolved
+            project.logger.info("Unresolved version $version for ${details.requested.group}:${details.requested.name}. Will not use it as a version.")
+          } else {
+            project.logger.debug("Resolved version $version for ${details.requested.group}:${details.requested.name}")
+            details.useVersion(version)
+          }
         } else {
           project.logger.debug("No managed version for ${details.requested.group}:${details.requested.name} --> using version ${details.requested.version}")
         }
