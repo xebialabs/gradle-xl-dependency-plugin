@@ -91,17 +91,21 @@ class XLDependencyPlatformPlugin implements Plugin<Project> {
                                      String projectName) {
     dependencyManagementContainer.managedVersions.collect { entry ->
       String artifactModule = entry.key
-      String artifactVersion = entry.value
-      if (artifactVersion?.trim()) {
-        dependencyConstraintHandler.add("api", artifactModule) {
-          version {
-            strictly(artifactVersion)
-            // NOTE: preferred versions will not be included into generated pom.xml
-            // prefer(artifactVersion)
+      String artifactVersion = entry.value?.trim()
+      if (artifactVersion) {
+        if (artifactVersion.startsWith("\${")) {
+          project.logger.info("Will not add $artifactModule to ${projectName} as ${artifactVersion} is not resolved version")
+        } else {
+          dependencyConstraintHandler.add("api", artifactModule) {
+            version {
+              strictly(artifactVersion)
+              // NOTE: preferred versions will not be included into generated pom.xml
+              // prefer(artifactVersion)
+            }
+            because("version was set by dependency manager")
           }
-          because("version was set by dependency manager")
+          project.logger.info("Added $artifactModule:$artifactVersion to ${projectName}")
         }
-        project.logger.info("Added $artifactModule:$artifactVersion to ${projectName}")
       } else {
         project.logger.info("Unable to add $artifactModule to ${projectName}")
       }
