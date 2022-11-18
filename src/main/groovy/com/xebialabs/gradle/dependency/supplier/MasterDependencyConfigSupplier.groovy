@@ -1,13 +1,11 @@
-package com.xebialabs.gradle.dependency.supplier;
+package com.xebialabs.gradle.dependency.supplier
 
-import com.typesafe.config.Config;
-import com.xebialabs.gradle.dependency.DependencyManagementContainer;
+import com.typesafe.config.Config
+import com.xebialabs.gradle.dependency.DependencyManagementContainer
 
-import java.util.ArrayList;
-import java.util.List;
-
-public class MasterDependencyConfigSupplier extends DependencyManagementSupplier {
+public class MasterDependencyConfigSupplier extends DependencyManagementSupplier implements ConfigFileCollector {
     private List<Config> configs = []
+    private Set<File> configFiles = []
 
     @Override
     def collectDependencies(DependencyManagementContainer container) {
@@ -38,6 +36,19 @@ public class MasterDependencyConfigSupplier extends DependencyManagementSupplier
     }
 
     def addConfig(ConfigSupplier p) {
-       configs.add(p.config)
+       configs.add(p.getConfig(this))
+    }
+
+    List<Config> getConfigs() {
+      configs
+    }
+
+    @Override
+    void collect(final File configFile) {
+      configFiles.add(configFile)
+    }
+
+    Set<File> getSuppliedConfigFiles() {
+      return configFiles
     }
 }

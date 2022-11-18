@@ -28,8 +28,20 @@ class DependencyManagementExtension {
     }
   }
 
-  def importConf(String s) {
-    project.logger.info("Added dependency management artifact: $s")
-    container.addSupplier(new DependencySupplier(this.project, s))
+  def importConf(Map attrs) {
+    String dependency = attrs.dependency
+    String extension = attrs.extension ? attrs.extension : "conf"
+    String classifier = attrs.classifier ? attrs.classifier : null
+    importConf(dependency, extension, classifier)
+  }
+
+  def importConf(String dependency, String extension = "conf", String classifier = null) {
+    project.logger.info("Added dependency management artifact: ${dependency}")
+    container.addSupplier(new DependencySupplier(this.project, dependency, extension, classifier))
+  }
+
+  def useJavaPlatform(Boolean useJavaPlatform) {
+    project.logger.warn("Dependency management plugin uses 'java-platform': $useJavaPlatform")
+    container.useJavaPlatform = useJavaPlatform
   }
 }

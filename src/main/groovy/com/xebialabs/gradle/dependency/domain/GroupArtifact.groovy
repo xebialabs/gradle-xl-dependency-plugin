@@ -13,7 +13,7 @@ class GroupArtifact {
     this.artifact = artifact
   }
 
-  def withVersion(String version) {
+  GroupArtifactVersion withVersion(String version) {
     return new GroupArtifactVersion(group, artifact, version)
   }
 
