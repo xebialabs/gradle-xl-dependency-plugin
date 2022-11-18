@@ -1,7 +1,11 @@
 package com.xebialabs.gradle.dependency.domain
 
+import groovy.transform.CompileStatic
+import groovy.transform.EqualsAndHashCode
 import org.gradle.api.artifacts.ModuleVersionSelector
 
+@CompileStatic
+@EqualsAndHashCode
 class GroupArtifactVersion extends GroupArtifact {
   String version
 
@@ -16,7 +20,7 @@ class GroupArtifactVersion extends GroupArtifact {
   }
 
   @Override
-  public String toString() {
+  String toString() {
     return "GroupArtifactVersion($group:$artifact:$version)"
   }
 }
