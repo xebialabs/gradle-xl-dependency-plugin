@@ -76,9 +76,8 @@ class DependencyManagementProjectConfigurer {
   }
 
   def static configureRewrites(DependencyManagementContainer container, Project project) {
-    if (container.useJavaPlatform) {
-      project.getDependencies().modules(new DependencyManagementRewriteRules(container, project))
-    }
+    // always rewrite dependencies - even when using legacy plugin implementation
+    project.getDependencies().modules(new DependencyManagementRewriteRules(container, project))
   }
 
   static def configureExcludeRules(DependencyManagementContainer container, Project project) {
