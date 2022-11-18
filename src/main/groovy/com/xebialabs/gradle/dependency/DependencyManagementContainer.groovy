@@ -27,8 +27,6 @@ class DependencyManagementContainer implements DependencyResolutionListener {
   // useJavaPlatform - false is pre gradle 7 style of managing dependencies
   boolean useJavaPlatform = false
 
-  int count = 0
-
   // versions MUST be valid simple groovy template string keys (i.e. cannot be 'something.nested.property')
   Map<String, String> versions = new HashMap<String, String>() //.withDefault { it }
 
@@ -49,7 +47,6 @@ class DependencyManagementContainer implements DependencyResolutionListener {
     projects.addAll(project.allprojects)
     this.resolutionContextMap = initializeResolutionContext()
     resolveCache = new HashMap<String, String>().withDefault { String s ->
-      count++
       s ? engine.createTemplate(s).make(resolutionContextMap).toString() : s
     }
   }
@@ -68,7 +65,6 @@ class DependencyManagementContainer implements DependencyResolutionListener {
       // this.supplier.collectRewrites(this) - loaded when created
       configureProjects()
       resolved = true
-      logger.error("resolveCache invoked $count times")
     }
   }
 
