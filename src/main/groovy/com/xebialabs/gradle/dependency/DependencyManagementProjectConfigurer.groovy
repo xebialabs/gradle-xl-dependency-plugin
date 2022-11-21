@@ -23,9 +23,12 @@ class DependencyManagementProjectConfigurer {
 
   static def configureExcludes(Project project, Configuration config, DependencyManagementContainer container) {
     container.blackList.each { ga ->
-      container.resolveIfNecessary()
-      project.logger.debug("Excluding ${ga.toMap()} from configuration ${config.getName()}")
-      config.exclude ga.toMap()
+      // DO NOT blacklist if there is a rewrite
+      if (!container.rewrites[ga]) {
+        container.resolveIfNecessary()
+        project.logger.debug("Excluding ${ga.toMap()} from configuration ${config.getName()}")
+        config.exclude ga.toMap()
+      }
     }
   }
 
