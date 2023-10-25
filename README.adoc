@@ -70,7 +70,7 @@ repositories {
 }
 
 dependencies {
-  compile "com.typesafe.akka:akka-actor_$scalaVersion"
+  compile "org.apache.pekko:pekko-actor_$scalaVersion"
   testCompile "junit:junit"
 }
 ----
