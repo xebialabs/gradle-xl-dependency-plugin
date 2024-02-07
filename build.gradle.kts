@@ -19,7 +19,7 @@ release {
 
 java {
     toolchain {
-        languageVersion.set(JavaLanguageVersion.of(11))
+        languageVersion.set(JavaLanguageVersion.of(17))
     }
     withSourcesJar()
     withJavadocJar()
@@ -72,11 +72,11 @@ tasks {
     }
 
     compileKotlin {
-        kotlinOptions.jvmTarget = JavaVersion.VERSION_11.toString()
+        kotlinOptions.jvmTarget = JavaVersion.VERSION_17.toString()
     }
 
     compileTestKotlin {
-        kotlinOptions.jvmTarget = JavaVersion.VERSION_11.toString()
+        kotlinOptions.jvmTarget = JavaVersion.VERSION_17.toString()
     }
 
     withType<ValidatePlugins>().configureEach {
