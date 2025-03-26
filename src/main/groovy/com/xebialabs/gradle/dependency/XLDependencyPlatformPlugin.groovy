@@ -16,6 +16,7 @@ class XLDependencyPlatformPlugin implements Plugin<Project> {
 
   void apply(Project project) {
     String projectName = project.getName()
+    project.logger.warn("${project.path}: Applying dependency management platform")
 
     DependencyManagementPlatformPluginExtension platformExtension = project.extensions.create("xlPlatform", DependencyManagementPlatformPluginExtension)
 
@@ -25,6 +26,7 @@ class XLDependencyPlatformPlugin implements Plugin<Project> {
       def dependencyManagementContainer = dependencyManagementExtension.container
 
       project.afterEvaluate {
+        dependencyManagementContainer.resolveIfNecessary()
         project.dependencies { DependencyHandler dependencyHandler ->
           dependencyHandler.with {
             constraints { DependencyConstraintHandler dependencyConstraintHandler ->
@@ -37,9 +39,8 @@ class XLDependencyPlatformPlugin implements Plugin<Project> {
             }
           }
         }
+        configureDependencyManagementJavaPlatform(project, dependencyManagementContainer)
       }
-
-      configureDependencyManagementJavaPlatform(project, dependencyManagementContainer)
     }
   }
 
@@ -90,17 +91,21 @@ class XLDependencyPlatformPlugin implements Plugin<Project> {
                                      String projectName) {
     dependencyManagementContainer.managedVersions.collect { entry ->
       String artifactModule = entry.key
-      String artifactVersion = entry.value
-      if (artifactVersion?.trim()) {
-        dependencyConstraintHandler.add("api", artifactModule) {
-          version {
-            strictly(artifactVersion)
-            // NOTE: preferred versions will not be included into generated pom.xml
-            // prefer(artifactVersion)
+      String artifactVersion = entry.value?.trim()
+      if (artifactVersion) {
+        if (artifactVersion.startsWith("\${")) {
+          project.logger.info("Will not add $artifactModule to ${projectName} as ${artifactVersion} is not resolved version")
+        } else {
+          dependencyConstraintHandler.add("api", artifactModule) {
+            version {
+              strictly(artifactVersion)
+              // NOTE: preferred versions will not be included into generated pom.xml
+              // prefer(artifactVersion)
+            }
+            because("version was set by dependency manager")
           }
-          because("version was set by dependency manager")
+          project.logger.info("Added $artifactModule:$artifactVersion to ${projectName}")
         }
-        project.logger.info("Added $artifactModule:$artifactVersion to ${projectName}")
       } else {
         project.logger.info("Unable to add $artifactModule to ${projectName}")
       }

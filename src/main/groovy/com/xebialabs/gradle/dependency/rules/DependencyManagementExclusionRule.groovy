@@ -1,6 +1,7 @@
 package com.xebialabs.gradle.dependency.rules
 
 import com.xebialabs.gradle.dependency.DependencyManagementContainer
+import com.xebialabs.gradle.dependency.domain.GroupArtifact
 import org.gradle.api.Action
 import org.gradle.api.artifacts.ComponentMetadataDetails
 
@@ -10,8 +11,7 @@ class DependencyManagementExclusionRule implements Action<ComponentMetadataDetai
 
   DependencyManagementExclusionRule(DependencyManagementContainer container) {
     this.container = container
-    def blacklisted = container.blackList.collect { ga -> "${ga.group}:${ga.artifact}".toString() }
-    this.forbiddenDependencies.addAll(blacklisted)
+    this.forbiddenDependencies.addAll(container.blackList.collect { ga -> "${ga.group}:${ga.artifact}".toString() })
   }
 
   @Override
@@ -23,8 +23,8 @@ class DependencyManagementExclusionRule implements Action<ComponentMetadataDetai
         removeIf { d ->
           String dependencyKey = "${d.group}:${d.name}".toString()
           def shouldBeExcluded = dependencyKey in forbiddenDependencies || dependencyKey in moduleExcludes
-          // TODO excluded dependencies should be excluded in generated pom.xml for a given dependency
-          shouldBeExcluded
+          def isNotRewritten = !container.rewrites[new GroupArtifact(d.group, d.name)]
+          return shouldBeExcluded && isNotRewritten
         }
       }
     }

@@ -61,7 +61,8 @@ abstract class DependencyManagementSupplier {
             return entry.unwrapped() as String
           }
           (o.get("artifacts") as ConfigList).each { ConfigValue entry ->
-            container.addManagedVersion(group, entry.unwrapped() as String, version, excludes)
+            String artifact = entry.unwrapped() as String
+            container.addManagedVersion(group, artifact, version, excludes)
           }
         } else {
           String artifact = o.get("artifact").unwrapped()

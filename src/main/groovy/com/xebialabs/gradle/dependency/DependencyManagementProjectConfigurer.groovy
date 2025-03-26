@@ -35,39 +35,44 @@ class DependencyManagementProjectConfigurer {
     }
   }
 
+  private static void rewrite(DependencyManagementContainer container, DependencyResolveDetails details) {
+    def rewrites = container.rewrites
+
+    def fromGa = new GroupArtifact(details.requested.group, details.requested.name)
+    GroupArtifact groupArtifact = rewrites[fromGa]
+    if (groupArtifact) {
+      def requestedVersion = container.getManagedVersion(details.requested.group, details.requested.name) ?: details.requested.version
+      def rewriteVersion = container.getManagedVersion(groupArtifact.group, groupArtifact.artifact)
+      if (rewriteVersion) {
+        groupArtifact = groupArtifact.withVersion(rewriteVersion)
+      } else {
+        groupArtifact = groupArtifact.withVersion(requestedVersion)
+      }
+
+      details.useTarget(groupArtifact.toMap(details.requested))
+      details.because("replaced by dependency management plugin rewrite")
+    }
+  }
+
   private static Action<? super DependencyResolveDetails> manageDependency(Project project, DependencyManagementContainer container) {
     return new Action<DependencyResolveDetails>() {
       @Override
       void execute(DependencyResolveDetails details) {
         container.resolveIfNecessary()
-        rewrite(details)
+        rewrite(container, details)
         enforceVersion(details)
-      }
-
-      private void rewrite(DependencyResolveDetails details) {
-        def rewrites = container.rewrites
-
-        def fromGa = new GroupArtifact(details.requested.group, details.requested.name)
-        GroupArtifact groupArtifact = rewrites[fromGa]
-        if (groupArtifact) {
-          def requestedVersion = container.getManagedVersion(details.requested.group, details.requested.name) ?: details.requested.version
-          def rewriteVersion = container.getManagedVersion(groupArtifact.group, groupArtifact.artifact)
-          if (rewriteVersion) {
-            groupArtifact = groupArtifact.withVersion(rewriteVersion)
-          } else {
-            groupArtifact = groupArtifact.withVersion(requestedVersion)
-          }
-          project.logger.debug("Rewriting $fromGa -> $groupArtifact")
-          details.useTarget(groupArtifact.toMap(details.requested))
-
-        }
       }
 
       private void enforceVersion(DependencyResolveDetails details) {
         def version = container.getManagedVersion(details.requested.group, details.requested.name)
         if (version) {
-          project.logger.debug("Resolved version $version for ${details.requested.group}:${details.requested.name}")
-          details.useVersion(version)
+          if (version.startsWith("\${")) {
+            // version is not resolved
+            project.logger.info("Unresolved version $version for ${details.requested.group}:${details.requested.name}. Will not use it as a version.")
+          } else {
+            project.logger.debug("Resolved version $version for ${details.requested.group}:${details.requested.name}")
+            details.useVersion(version)
+          }
         } else {
           project.logger.debug("No managed version for ${details.requested.group}:${details.requested.name} --> using version ${details.requested.version}")
         }
@@ -76,8 +81,13 @@ class DependencyManagementProjectConfigurer {
   }
 
   def static configureRewrites(DependencyManagementContainer container, Project project) {
-    if (container.useJavaPlatform) {
-      project.getDependencies().modules(new DependencyManagementRewriteRules(container, project))
+    // always rewrite dependencies - even when using legacy plugin implementation
+    project.getDependencies().modules(new DependencyManagementRewriteRules(container, project))
+    // While gradle works with rewrite above, IntelliJ IDEA does not. So we need to rewrite dependencies in configurations as well.
+    project.getConfigurations().configureEach { Configuration conf ->
+      conf.resolutionStrategy.eachDependency { DependencyResolveDetails details ->
+        rewrite(container, details)
+      }
     }
   }
 
