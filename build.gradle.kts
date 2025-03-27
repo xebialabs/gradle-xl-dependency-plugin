@@ -1,13 +1,14 @@
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import nebula.plugin.release.git.opinion.Strategies
 
 plugins {
-    kotlin("jvm") version "1.6.21"
+    kotlin("jvm") version "2.0.20"
 
     id("groovy")
     id("idea")
     id("maven-publish")
     id("com.github.hierynomus.license") version "0.16.1"
-    id("nebula.release") version "17.1.0"
+    id("nebula.release") version "20.2.0"
 }
 
 group = "gradle.plugin.com.xebialabs"
@@ -19,7 +20,7 @@ release {
 
 java {
     toolchain {
-        languageVersion.set(JavaLanguageVersion.of(17))
+        languageVersion.set(JavaLanguageVersion.of(21))
     }
     withSourcesJar()
     withJavadocJar()
@@ -27,8 +28,8 @@ java {
 
 idea {
     module {
-        setDownloadJavadoc(true)
-        setDownloadSources(true)
+        isDownloadJavadoc = true
+        isDownloadSources = true
     }
 }
 
@@ -66,17 +67,21 @@ tasks {
 
     register("dumpVersion") {
         doLast {
-            file(buildDir).mkdirs()
-            file("$buildDir/version.dump").writeText("version=${project.version}")
+            layout.buildDirectory.asFile.get().mkdirs()
+            layout.buildDirectory.file("version.dump").get().asFile.writeText("version=${project.version}")
         }
     }
 
     compileKotlin {
-        kotlinOptions.jvmTarget = JavaVersion.VERSION_17.toString()
+        compilerOptions{
+            jvmTarget.set(JvmTarget.JVM_21)
+        }
     }
 
     compileTestKotlin {
-        kotlinOptions.jvmTarget = JavaVersion.VERSION_17.toString()
+        compilerOptions{
+            jvmTarget.set(JvmTarget.JVM_21)
+        }
     }
 
     withType<ValidatePlugins>().configureEach {
