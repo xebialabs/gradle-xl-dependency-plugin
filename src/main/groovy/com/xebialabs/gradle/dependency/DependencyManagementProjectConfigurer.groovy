@@ -13,7 +13,7 @@ class DependencyManagementProjectConfigurer {
 
   static def configureProject(Project project, DependencyManagementContainer container) {
     // Contract for all is that it executes the closure for all currently assigned objects, and any objects added later.
-    project.getConfigurations().all { Configuration config ->
+    project.getConfigurations().configureEach { Configuration config ->
       if (!container.useJavaPlatform) {
         if (config.name != 'zinc') { // The Scala compiler 'zinc' configuration should not be managed by us
           config.resolutionStrategy { ResolutionStrategy rs ->
