@@ -59,7 +59,7 @@ class XLDependencyPlatformPlugin implements Plugin<Project> {
       // outputs.upToDateWhen { false } // we have inputFiles just to detect if anything changed
       group = "publishing"
       inputFiles = dependencyManagementContainer.suppliedConfigFiles
-      outputFile = project.file("${project.buildDir}/${project.name}.conf")
+      outputFile = project.layout.buildDirectory.file("${project.name}.conf").get().asFile
       setDependencyManagementContainer(dependencyManagementContainer)
     }
     def exportedConfFileArtifact = project.artifacts.add(confFileConfiguration.name, exportConfTask.get().outputFile) {
