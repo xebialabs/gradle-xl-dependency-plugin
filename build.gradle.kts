@@ -59,11 +59,6 @@ publishing {
 
 tasks {
 
-    // TODO not needed for 3.0.x
-//    named<Upload>("uploadArchives") {
-//        dependsOn(named("publish"))
-//    }
-
     register("dumpVersion") {
         doLast {
             layout.buildDirectory.get().asFile.mkdirs()
@@ -72,11 +67,15 @@ tasks {
     }
 
     compileKotlin {
-        kotlinOptions.jvmTarget = JavaVersion.VERSION_21.toString()
+        compilerOptions {
+            jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_21)
+        }
     }
 
     compileTestKotlin {
-        kotlinOptions.jvmTarget = JavaVersion.VERSION_21.toString()
+        compilerOptions {
+            jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_21)
+        }
     }
 
     withType<ValidatePlugins>().configureEach {
