@@ -40,7 +40,7 @@ abstract class DependencyManagementSupplier {
 
   private def parseVersions(Config config, DependencyManagementContainer dependencyManagementContainer) {
     config.entrySet().each { e ->
-      String key = e.key.startsWith("\"") ? e.key[1..-2] : e.key
+      String key = e.key.startsWith('"') ? e.key.substring(1, e.key.length() - 1) : e.key
       dependencyManagementContainer.registerVersionKey(key, e.value.unwrapped() as String)
     }
   }
@@ -88,7 +88,7 @@ abstract class DependencyManagementSupplier {
 
   private def parseRewrites(Config config, DependencyManagementContainer container) {
     config.entrySet().each { e ->
-      String key = e.key.startsWith("\"") ? e.key[1..-2] : e.key
+      String key = e.key.startsWith('"') ? e.key.substring(1, e.key.length() - 1) : e.key
       def ga = key.split(":")
       def toGa = (e.value.unwrapped() as String).split(":")
       container.rewrite(ga[0], ga[1], toGa[0], toGa[1])
