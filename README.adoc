@@ -21,6 +21,7 @@ buildscript {
     }
   }
 
+
   dependencies {
     classpath "gradle.plugin.com.xebialabs:gradle-xl-dependency-plugin:{plugin_version}"
   }
