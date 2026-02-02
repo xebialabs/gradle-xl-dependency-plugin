@@ -8,23 +8,23 @@ import java.util.function.Function;
  * Replacement for Groovy's Map.withDefault { } pattern.
  */
 class DefaultValueMap<K, V> extends HashMap<K, V> {
-  
-  private final Function<K, V> defaultValueFunction;
 
-  public DefaultValueMap(Function<K, V> defaultValueFunction) {
-    super();
-    this.defaultValueFunction = defaultValueFunction;
-  }
+    private final Function<K, V> defaultValueFunction;
 
-  @Override
-  public V get(Object key) {
-    V value = super.get(key);
-    if (value == null && !containsKey(key)) {
-      @SuppressWarnings("unchecked")
-      K typedKey = (K) key;
-      value = defaultValueFunction.apply(typedKey);
-      // Note: We don't auto-put the value like Groovy does, to match the original behavior more closely
+    public DefaultValueMap(Function<K, V> defaultValueFunction) {
+        super();
+        this.defaultValueFunction = defaultValueFunction;
     }
-    return value;
-  }
+
+    @Override
+    public V get(Object key) {
+        V value = super.get(key);
+        if (value == null && !containsKey(key)) {
+            @SuppressWarnings("unchecked")
+            K typedKey = (K) key;
+            value = defaultValueFunction.apply(typedKey);
+            // Note: We don't auto-put the value like Groovy does, to match the original behavior more closely
+        }
+        return value;
+    }
 }
