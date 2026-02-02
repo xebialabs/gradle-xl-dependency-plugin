@@ -29,11 +29,14 @@ java {
 sourceSets {
     main {
         groovy {
-            // Exclude Groovy files that have been converted to Java (Batch 1)
+            // Exclude Groovy files that have been converted to Java (Batch 1 & 3)
             exclude("com/xebialabs/gradle/dependency/supplier/ConfigSupplier.groovy")
             exclude("com/xebialabs/gradle/dependency/supplier/ConfigFileCollector.groovy")
             exclude("com/xebialabs/gradle/dependency/domain/GroupArtifact.groovy")
             exclude("com/xebialabs/gradle/dependency/domain/GroupArtifactVersion.groovy")
+            exclude("com/xebialabs/gradle/dependency/supplier/FileSupplier.groovy")
+            exclude("com/xebialabs/gradle/dependency/supplier/ProjectSupplier.groovy")
+            exclude("com/xebialabs/gradle/dependency/supplier/DependencySupplier.groovy")
         }
     }
 }
