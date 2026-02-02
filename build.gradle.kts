@@ -3,8 +3,7 @@ import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 plugins {
     kotlin("jvm") version "2.0.20"
-
-    id("groovy")
+    id("java")
     id("idea")
     id("maven-publish")
     id("com.github.hierynomus.license") version "0.16.1"
@@ -26,33 +25,7 @@ java {
     withJavadocJar()
 }
 
-sourceSets {
-    main {
-        groovy {
-            // Exclude Groovy files that have been converted to Java (Batches 1, 3, 5, 6, 8)
-            exclude("com/xebialabs/gradle/dependency/supplier/ConfigSupplier.groovy")
-            exclude("com/xebialabs/gradle/dependency/supplier/ConfigFileCollector.groovy")
-            exclude("com/xebialabs/gradle/dependency/domain/GroupArtifact.groovy")
-            exclude("com/xebialabs/gradle/dependency/domain/GroupArtifactVersion.groovy")
-            exclude("com/xebialabs/gradle/dependency/supplier/FileSupplier.groovy")
-            exclude("com/xebialabs/gradle/dependency/supplier/ProjectSupplier.groovy")
-            exclude("com/xebialabs/gradle/dependency/supplier/DependencySupplier.groovy")
-            exclude("com/xebialabs/gradle/dependency/supplier/DependencyManagementSupplier.groovy")
-            exclude("com/xebialabs/gradle/dependency/supplier/MasterDependencyConfigSupplier.groovy")
-            exclude("com/xebialabs/gradle/dependency/DependencyManagementContainer.groovy")
-            exclude("com/xebialabs/gradle/dependency/DependencyManagementExtension.groovy")
-            exclude("com/xebialabs/gradle/dependency/DependencyManagementPlatformPluginExtension.groovy")
-            exclude("com/xebialabs/gradle/dependency/DependencyManagementProjectConfigurer.groovy")
-            exclude("com/xebialabs/gradle/dependency/rules/DependencyManagementExclusionRule.groovy")
-            exclude("com/xebialabs/gradle/dependency/rules/DependencyManagementExclusionRules.groovy")
-            exclude("com/xebialabs/gradle/dependency/rules/DependencyManagementRewriteRules.groovy")
-            exclude("com/xebialabs/gradle/dependency/tasks/ExportConfTask.groovy")
-            exclude("com/xebialabs/gradle/dependency/XLDependencyPlugin.groovy")
-            exclude("com/xebialabs/gradle/dependency/XLDependencyBasePlugin.groovy")
-            exclude("com/xebialabs/gradle/dependency/XLDependencyPlatformPlugin.groovy")
-        }
-    }
-}
+// All Groovy files have been converted to Java - no additional configuration needed
 
 idea {
     module {
@@ -63,7 +36,7 @@ idea {
 
 dependencies {
     implementation(gradleApi())
-    implementation(localGroovy())
+    // localGroovy() no longer needed - all code is Java
     implementation("com.typesafe:config:1.2.1")
 }
 
