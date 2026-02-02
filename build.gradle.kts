@@ -29,7 +29,7 @@ java {
 sourceSets {
     main {
         groovy {
-            // Exclude Groovy files that have been converted to Java (Batch 1 & 3)
+            // Exclude Groovy files that have been converted to Java (Batches 1, 3, 5)
             exclude("com/xebialabs/gradle/dependency/supplier/ConfigSupplier.groovy")
             exclude("com/xebialabs/gradle/dependency/supplier/ConfigFileCollector.groovy")
             exclude("com/xebialabs/gradle/dependency/domain/GroupArtifact.groovy")
@@ -37,6 +37,15 @@ sourceSets {
             exclude("com/xebialabs/gradle/dependency/supplier/FileSupplier.groovy")
             exclude("com/xebialabs/gradle/dependency/supplier/ProjectSupplier.groovy")
             exclude("com/xebialabs/gradle/dependency/supplier/DependencySupplier.groovy")
+            exclude("com/xebialabs/gradle/dependency/supplier/DependencyManagementSupplier.groovy")
+            exclude("com/xebialabs/gradle/dependency/supplier/MasterDependencyConfigSupplier.groovy")
+            exclude("com/xebialabs/gradle/dependency/DependencyManagementContainer.groovy")
+            exclude("com/xebialabs/gradle/dependency/DependencyManagementExtension.groovy")
+            exclude("com/xebialabs/gradle/dependency/DependencyManagementPlatformPluginExtension.groovy")
+            exclude("com/xebialabs/gradle/dependency/DependencyManagementProjectConfigurer.groovy")
+            exclude("com/xebialabs/gradle/dependency/rules/DependencyManagementExclusionRule.groovy")
+            exclude("com/xebialabs/gradle/dependency/rules/DependencyManagementExclusionRules.groovy")
+            exclude("com/xebialabs/gradle/dependency/rules/DependencyManagementRewriteRules.groovy")
         }
     }
 }
