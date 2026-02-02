@@ -29,7 +29,7 @@ java {
 sourceSets {
     main {
         groovy {
-            // Exclude Groovy files that have been converted to Java (Batches 1, 3, 5)
+            // Exclude Groovy files that have been converted to Java (Batches 1, 3, 5, 6)
             exclude("com/xebialabs/gradle/dependency/supplier/ConfigSupplier.groovy")
             exclude("com/xebialabs/gradle/dependency/supplier/ConfigFileCollector.groovy")
             exclude("com/xebialabs/gradle/dependency/domain/GroupArtifact.groovy")
@@ -46,6 +46,7 @@ sourceSets {
             exclude("com/xebialabs/gradle/dependency/rules/DependencyManagementExclusionRule.groovy")
             exclude("com/xebialabs/gradle/dependency/rules/DependencyManagementExclusionRules.groovy")
             exclude("com/xebialabs/gradle/dependency/rules/DependencyManagementRewriteRules.groovy")
+            exclude("com/xebialabs/gradle/dependency/tasks/ExportConfTask.groovy")
         }
     }
 }
