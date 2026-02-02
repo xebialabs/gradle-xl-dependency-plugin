@@ -40,10 +40,10 @@ public class DependencyManagementExtension {
     }
   }
 
-  public void importConf(Map<String, String> attrs) {
-    String dependency = attrs.get("dependency");
-    String extension = attrs.getOrDefault("extension", "conf");
-    String classifier = attrs.get("classifier");
+  public void importConf(Map<String, ?> attrs) {
+    String dependency = String.valueOf(attrs.get("dependency"));
+    String extension = attrs.containsKey("extension") ? String.valueOf(attrs.get("extension")) : "conf";
+    String classifier = attrs.containsKey("classifier") ? String.valueOf(attrs.get("classifier")) : null;
     importConf(dependency, extension, classifier);
   }
 
