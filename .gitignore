@@ -68,3 +68,4 @@ deployitpackage/
 
 #NodeJS
 node_modules/
+/.opencode/
