@@ -68,4 +68,6 @@ deployitpackage/
 
 #NodeJS
 node_modules/
+
+# agent related
 /.opencode/

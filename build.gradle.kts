@@ -3,12 +3,11 @@ import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 plugins {
     kotlin("jvm") version "2.0.20"
-
-    id("groovy")
+    id("java")
     id("idea")
     id("maven-publish")
     id("com.github.hierynomus.license") version "0.16.1"
-    id("nebula.release") version "20.2.0"
+    id("nebula.release") version "21.0.0"
 }
 
 group = "gradle.plugin.com.xebialabs"
@@ -35,7 +34,7 @@ idea {
 
 dependencies {
     implementation(gradleApi())
-    implementation(localGroovy())
+    // localGroovy() no longer needed - all code is Java
     implementation("com.typesafe:config:1.2.1")
 }
 
@@ -59,11 +58,6 @@ publishing {
 }
 
 tasks {
-
-    // TODO not needed for 3.0.x
-//    named<Upload>("uploadArchives") {
-//        dependsOn(named("publish"))
-//    }
 
     register("dumpVersion") {
         doLast {
