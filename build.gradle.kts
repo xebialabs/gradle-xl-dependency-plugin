@@ -7,7 +7,7 @@ plugins {
     id("idea")
     id("maven-publish")
     id("com.github.hierynomus.license") version "0.16.1"
-    id("nebula.release") version "20.2.0"
+    id("nebula.release") version "21.0.0"
 }
 
 group = "gradle.plugin.com.xebialabs"
