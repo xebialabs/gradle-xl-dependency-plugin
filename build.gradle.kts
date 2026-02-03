@@ -25,8 +25,6 @@ java {
     withJavadocJar()
 }
 
-// All Groovy files have been converted to Java - no additional configuration needed
-
 idea {
     module {
         isDownloadJavadoc = true
@@ -60,11 +58,6 @@ publishing {
 }
 
 tasks {
-
-    // TODO not needed for 3.0.x
-//    named<Upload>("uploadArchives") {
-//        dependsOn(named("publish"))
-//    }
 
     register("dumpVersion") {
         doLast {
