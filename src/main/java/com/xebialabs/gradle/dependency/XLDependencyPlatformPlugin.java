@@ -49,6 +49,7 @@ public class XLDependencyPlatformPlugin implements Plugin<Project> {
         Configuration confFileConfiguration = project.getConfigurations().create("confFile");
         confFileConfiguration.setCanBeResolved(false);
         confFileConfiguration.setCanBeConsumed(true);
+        confFileConfiguration.setVisible(false); // Make it non-visible to avoid pollution
         confFileConfiguration.attributes(attributes -> {
             attributes.attribute(
                     LibraryElements.LIBRARY_ELEMENTS_ATTRIBUTE,
@@ -69,8 +70,10 @@ public class XLDependencyPlatformPlugin implements Plugin<Project> {
             task.setDependencyManagementContainer(dependencyManagementContainer);
         });
 
+        // Register artifact using task provider to ensure proper dependency wiring
+        // The task provider ensures Gradle knows to build the task before resolving the artifact
         ConfigurablePublishArtifact exportedConfFileArtifact = (ConfigurablePublishArtifact) project.getArtifacts()
-                .add(confFileConfiguration.getName(), exportConfTask.get().getOutputFile(), artifact -> {
+                .add(confFileConfiguration.getName(), exportConfTask, artifact -> {
                     artifact.setExtension("conf");
                 });
 
